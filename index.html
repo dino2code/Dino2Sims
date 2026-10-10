@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>סימולטורים לקורס הגברה</title>
+<style>
+:root{
+  --bg:#E6E9ED; --panel:#F5F7F9; --fg:#16202A; --muted:#55626F; --line:#C9D0D8; --accent:#0C6F84;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#0A0E12; --panel:#141B21; --fg:#E7ECF0; --muted:#97A4B0; --line:#26303A; --accent:#35B5CF;
+  color-scheme:dark } }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,'Segoe UI','Noto Sans Hebrew',Roboto,Arial,sans-serif;font-size:17px;line-height:1.55;padding:40px 16px 56px}
+main{max-width:640px;margin-inline:auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+a.sim{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+a.sim:hover,a.sim:focus-visible{border-color:var(--accent);outline:none}
+a.sim b{font-size:20px;font-weight:600}
+a.sim span{color:var(--muted);font-size:15.5px}
+a.sim i{font-style:normal;font-weight:600;color:var(--accent);font-size:15px;margin-top:4px}
+footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <h1>סימולטורים לקורס הגברה</h1>
+  <p>הדמיות אינטראקטיביות לתרגול. נפתחות בדפדפן, בטלפון או במחשב, בלי התקנה.</p>
+  <ul>
+    <li>
+      <a class="sim" href="vocal-compressor/">
+        <b>סימולטור קומפרסור לשירה</b>
+        <span>מה Attack,&rlm; Release ו-Ratio עושים לתנועות, לעיצורים ולמילה שקטה. שבעה שלבים מודרכים, עם גרף וצליל.</span>
+        <i>פתיחת הסימולטור ←</i>
+      </a>
+    </li>
+  </ul>
+  <footer>ההדמיות ממחישות עקרונות ואינן מדידה.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>סימולטור קומפרסור לשירה</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@700&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a guided lesson. One step card on top, the dark console screen under it, three controls and three results below. Everything else is folded away. */
+:root{
+  --bg:#E6E9ED; --panel:#F5F7F9; --fg:#16202A; --muted:#55626F; --line:#C9D0D8; --track:#CBD3DB;
+  --accent:#0C6F84; --accent-ink:#FFFFFF; --shadow:rgba(22,32,42,.10);
+  --scr:#10161B; --scr-2:#18212A; --scr-line:#25303A; --scr-fg:#E9EEF2; --scr-muted:#93A1AE;
+  --out:#1FA0BA; --gr:#E5607A; --vowel:#B19110; --cons:#8F7FE8; --breath:#6F7C88; --in:#8A99A6;
+  --font-display:'Karantina', 'Arial Narrow', Arial, sans-serif;
+  --font-text:'IBM Plex Sans Hebrew', 'Segoe UI', Arial, sans-serif;
+  --font-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0A0E12; --panel:#141B21; --fg:#E7ECF0; --muted:#97A4B0; --line:#26303A; --track:#2B3640;
+  --accent:#35B5CF; --accent-ink:#06171C; --shadow:rgba(0,0,0,.35); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0A0E12; --panel:#141B21; --fg:#E7ECF0; --muted:#97A4B0; --line:#26303A; --track:#2B3640;
+  --accent:#35B5CF; --accent-ink:#06171C; --shadow:rgba(0,0,0,.35); color-scheme:dark }
+
+body{background:var(--bg);color:var(--fg);font-family:var(--font-text);font-size:16.5px;line-height:1.55;padding-inline:16px;padding-block:28px 56px}
+.page{max-width:1000px;margin-inline:auto;display:flex;flex-direction:column;gap:22px}
+.head{display:flex;flex-direction:column;gap:6px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(36px,5.6vw,58px);line-height:1;letter-spacing:.01em;margin:0;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+h2{font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--muted);margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,canvas:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.small{margin:0;font-size:14px;color:var(--muted);max-width:68ch}
+
+/* the lesson card */
+.guide{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.gtop{display:flex;align-items:center;gap:14px}
+.gcount{font-family:var(--font-data);font-size:13px;font-weight:600;color:var(--muted);direction:ltr;white-space:nowrap}
+.gbar{flex:1;display:flex;gap:4px;direction:rtl}
+.gbar i{flex:1;height:4px;border-radius:2px;background:var(--track)}
+.gbar i.on{background:var(--accent)}
+.gtitle{font-size:21px;font-weight:600;letter-spacing:0;color:var(--fg);line-height:1.25}
+.gtext{margin:0;max-width:64ch;font-size:17px}
+.gwatch{margin:0;font-weight:500;color:var(--accent)}
+.gnav{display:flex;gap:10px;margin-top:4px}
+.gnav button{font-size:15.5px;font-weight:500;border-radius:9px;padding:9px 22px;border:1px solid var(--line);background:transparent;color:var(--fg)}
+.gnav button:hover:not(:disabled){border-color:var(--muted)}
+.gnav button:disabled{opacity:.4;cursor:default}
+.gnav .primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* the screen */
+.display{background:var(--scr);color:var(--scr-fg);border-radius:14px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;min-width:0;box-shadow:0 18px 40px -22px var(--shadow)}
+.dbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;justify-content:space-between}
+.play{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--scr-fg);background:var(--scr-2);border:1px solid var(--scr-line);border-radius:999px;padding:7px 14px 7px 16px}
+.play:hover{border-color:var(--scr-muted)}
+.play svg{width:12px;height:12px;fill:var(--scr-fg);flex:none}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.listen{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--scr-muted)}
+.listen svg{width:15px;height:15px;fill:none;stroke:var(--scr-muted);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.listen button{font-size:14px;font-weight:500;color:var(--scr-fg);background:var(--scr-2);border:1px solid var(--scr-line);border-radius:999px;padding:7px 14px}
+.listen button:hover{border-color:var(--scr-muted)}
+.listen button[aria-pressed="true"]{background:var(--scr-fg);border-color:var(--scr-fg);color:var(--scr)}
+.display .listen button:focus-visible{outline-color:var(--out)}
+.aumsg{font-size:13px;color:var(--scr-muted)}
+.tempo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13.5px;color:var(--scr-muted)}
+.tempo span{margin-inline-end:4px}
+.tempo button{display:inline-flex;align-items:baseline;gap:6px;font-size:13px;font-weight:500;color:var(--scr-fg);background:var(--scr-2);border:1px solid var(--scr-line);border-radius:999px;padding:4px 11px}
+.tempo button small{font-family:var(--font-data);font-size:11.5px;font-weight:500;color:var(--scr-muted);direction:ltr}
+.tempo button:hover{border-color:var(--scr-muted)}
+.tempo button[aria-pressed="true"]{background:var(--scr-fg);border-color:var(--scr-fg);color:var(--scr)}
+.tempo button[aria-pressed="true"] small{color:var(--scr)}
+.display .tempo button:focus-visible{outline-color:var(--out)}
+.display .play:focus-visible,.display canvas:focus-visible{outline-color:var(--out)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--scr-muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend u{width:12px;height:12px;border-radius:3px;text-decoration:none;flex:none}
+.legend i{width:20px;height:0;flex:none}
+.k-v{background:var(--vowel)} .k-c{background:var(--cons)} .k-b{background:var(--breath)}
+.k-out{border-top:3px solid var(--out)} .k-in{border-top:2px dashed var(--in)}
+#wrap{position:relative;width:100%;height:420px;direction:ltr}
+canvas{display:block;max-width:100%;touch-action:pan-y;cursor:crosshair;border-radius:6px}
+.cursor{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;border-top:1px solid var(--scr-line);padding-top:12px}
+.cursor .at{font-size:14px;color:var(--scr-muted);white-space:nowrap}
+.cursor .at b{font-weight:600;color:var(--scr-fg)}
+.grrow{flex:1 1 260px;display:flex;align-items:center;gap:12px;direction:ltr;min-width:0}
+.grrow span{font-family:var(--font-data);font-size:12px;color:var(--scr-muted);white-space:nowrap}
+.grrow b{font-family:var(--font-data);font-size:16px;font-weight:600;min-width:72px;text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}
+.grm{position:relative;flex:1;height:12px;border-radius:3px;background:var(--scr-2);overflow:hidden;min-width:60px;background-image:linear-gradient(to right,var(--scr-line) 1px,transparent 1px);background-size:25% 100%}
+.grm i{position:absolute;inset-block:0;right:0;width:0;background:var(--gr);border-radius:3px 0 0 3px}
+
+/* controls and results */
+.work{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px 36px;align-items:start}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.row{display:grid;grid-template-columns:108px minmax(0,1fr) 78px;gap:12px;align-items:center}
+.row label,.row .lab{font-weight:500;font-size:15.5px}
+.row output{font-family:var(--font-data);font-size:15px;font-weight:600;direction:ltr;text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .seg{grid-column:2 / -1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;min-width:0;height:28px;margin:0;background:transparent;direction:ltr;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--p,50%),var(--track) var(--p,50%))}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--track)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--panel);border:2px solid var(--accent);margin-top:-8px;box-shadow:0 1px 3px var(--shadow)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--panel);border:2px solid var(--accent);box-shadow:0 1px 3px var(--shadow)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:14.5px;font-weight:500;min-width:0}
+.seg button small{font-family:var(--font-data);font-size:12.5px;font-weight:500;color:var(--muted);direction:ltr}
+.seg button.mono{font-family:var(--font-data);font-size:13.5px;direction:ltr;padding-block:8px}
+.seg button:hover{border-color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"] small{color:var(--accent-ink)}
+.results{display:flex;flex-direction:column}
+.res{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:11px 12px;border-bottom:1px solid var(--line);border-radius:8px;min-width:0}
+.res:last-child{border-bottom:0}
+.res span{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--muted);min-width:0}
+.res span i{width:10px;height:10px;border-radius:2px;flex:none}
+.res b{font-family:var(--font-data);font-size:21px;font-weight:600;direction:ltr;font-variant-numeric:tabular-nums;white-space:nowrap}
+.res.hot{background:var(--panel);box-shadow:inset 0 0 0 2px var(--accent);border-bottom-color:transparent}
+.res.hot span{color:var(--fg)}
+
+/* folded sections */
+details{border-top:1px solid var(--line)}
+summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding-block:14px;font-weight:600;font-size:16px;border-radius:6px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:8px;height:8px;border-left:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:none;margin-inline-start:3px}
+details[open] summary::before{transform:rotate(-45deg)}
+summary small{font-weight:400;font-size:14px;color:var(--muted)}
+.adv{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px 36px;align-items:start;padding-bottom:18px}
+.switch{display:flex;align-items:center;gap:12px;font-weight:500;font-size:15.5px;cursor:pointer}
+.switch output{font-family:var(--font-data);font-size:15px;font-weight:600;direction:ltr;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+.sw{-webkit-appearance:none;appearance:none;flex:none;width:44px;height:24px;margin:0;border-radius:12px;background:var(--track);position:relative;cursor:pointer;transition:background .15s}
+.sw::before{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--panel);transition:transform .15s}
+.sw:checked{background:var(--accent)}
+.sw:checked::before{transform:translateX(-20px)}
+.field{display:flex;flex-direction:column;gap:6px}
+.mini{background:var(--scr);color:var(--scr-fg);border-radius:12px;padding:14px;display:flex;flex-wrap:wrap;gap:14px 18px;align-items:center;min-width:0}
+#twrap{position:relative;width:210px;height:210px;max-width:100%;flex:none;direction:ltr}
+#tc{cursor:default}
+.tlist{flex:1 1 150px;min-width:0;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.tlist li{display:flex;flex-direction:column;gap:1px}
+.tlist span{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--scr-muted)}
+.tlist span i{width:10px;height:10px;border-radius:50%;flex:none}
+.tlist b{font-family:var(--font-data);font-size:15px;font-weight:600;direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tlist small{font-size:12.5px;color:var(--scr-muted)}
+.d-v{background:var(--vowel)} .d-q{background:var(--scr-fg)} .d-c{background:var(--cons)}
+.about{display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.adv.one{grid-template-columns:minmax(0,1fr);max-width:560px}
+@media (max-width:820px){ .work,.adv{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:640px){ #wrap{height:340px} .display{padding:12px;border-radius:12px} .row{grid-template-columns:minmax(0,1fr) auto} .row label,.row .lab{grid-column:1 / -1;margin-bottom:-8px} .row .seg{grid-column:1 / -1} .guide{padding:16px} .gtext{font-size:16.5px} }
+@media (prefers-reduced-motion: reduce){ .sw,.sw::before,summary::before{transition:none} }
+</style>
+<div class="page" dir="rtl" lang="he">
+  <header class="head">
+    <h1>סימולטור קומפרסור לשירה</h1>
+    <p class="lede">מה Attack,&rlm; Release ו-Ratio עושים לתנועות, לעיצורים ולמילה שקטה.</p>
+  </header>
+
+  <section class="guide" aria-label="הדרכה שלב אחרי שלב">
+    <div class="gtop"><span class="gcount" id="gc"></span><div class="gbar" id="gb" aria-hidden="true"></div></div>
+    <div aria-live="polite" style="display:flex;flex-direction:column;gap:8px">
+      <h2 class="gtitle" id="gt"></h2>
+      <p class="gtext" id="gx"></p>
+      <p class="gwatch" id="gw"></p>
+    </div>
+    <div class="gnav">
+      <button class="primary" id="gnext" type="button">הבא</button>
+      <button id="gprev" type="button">הקודם</button>
+    </div>
+  </section>
+
+  <section class="display" aria-label="תצוגת הקומפרסור">
+    <div class="dbar">
+      <div class="tools">
+      <button class="play" id="play" type="button" aria-pressed="false">
+        <svg id="ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z"/></svg>
+        <svg id="ic-stop" viewBox="0 0 12 12" aria-hidden="true" hidden><path d="M2 2 H10 V10 H2 Z"/></svg>
+        <span id="plt">נגן בהילוך איטי</span>
+      </button>
+      <div class="listen" role="group" aria-label="האזנה">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6.2 H5 L8.2 3.5 V12.5 L5 9.8 H2.5 Z"/><path d="M10.6 5.6 C11.6 6.9 11.6 9.1 10.6 10.4"/><path d="M12.5 3.9 C14.3 6.2 14.3 9.8 12.5 12.1"/></svg>
+        <span>השמע</span>
+        <button id="au-in" type="button" aria-pressed="false">כניסה</button>
+        <button id="au-out" type="button" aria-pressed="false">יציאה</button>
+        <span class="aumsg" id="au-msg" hidden>הדפדפן הזה לא מאפשר להשמיע צליל.</span>
+      </div>
+      </div>
+      <div class="legend">
+        <span><u class="k-v"></u>תנועה</span>
+        <span><u class="k-c"></u>עיצור</span>
+        <span><u class="k-b"></u>נשימה</span>
+        <span><i class="k-in"></i>כניסה</span>
+        <span><i class="k-out"></i>יציאה</span>
+      </div>
+    </div>
+    <div class="tempo" role="group" aria-labelledby="tl">
+      <span id="tl">קצב</span>
+      <button id="r1" type="button" data-v="100" aria-pressed="true">דיבור או ראפ<small>100 ms</small></button>
+      <button id="r2" type="button" data-v="250" aria-pressed="false">שירה בינונית<small>250 ms</small></button>
+      <button id="r3" type="button" data-v="600" aria-pressed="false">בלדה<small>600 ms</small></button>
+    </div>
+    <div id="wrap"><canvas id="cv" tabindex="0" role="img" aria-label="מעטפת העוצמה בכניסה וביציאה, ומתחתיה ה-Gain Reduction, לאורך מילה חזקה, נשימה ומילה שקטה. גוררים או משתמשים בחיצים כדי להזיז את הסמן לאורך הזמן.">גרף של עוצמת הכניסה, עוצמת היציאה ו-Gain Reduction לאורך המשפט.</canvas></div>
+    <div class="cursor">
+      <span class="at">בנקודת הסמן: <b id="c2"></b></span>
+      <div class="grrow"><span>GR</span><div class="grm" aria-hidden="true"><i id="grfill"></i></div><b id="c5"></b></div>
+    </div>
+  </section>
+
+  <div class="work">
+    <section class="panel" aria-label="כיוון">
+      <div class="row"><label for="at">Attack</label><input type="range" id="at" min="0" max="10000" step="1" value="6594"><output id="ato" for="at"></output></div>
+      <div class="row"><label for="rl">Release</label><input type="range" id="rl" min="0" max="10000" step="1" value="5113"><output id="rlo" for="rl"></output></div>
+      <div class="row"><span class="lab" id="ql">Ratio</span>
+        <div class="seg" role="group" aria-labelledby="ql">
+          <button class="mono" id="q2" type="button" data-v="2" aria-pressed="false">2:1</button>
+          <button class="mono" id="q4" type="button" data-v="4" aria-pressed="true">4:1</button>
+          <button class="mono" id="q8" type="button" data-v="8" aria-pressed="false">8:1</button>
+          <button class="mono" id="q10" type="button" data-v="10" aria-pressed="false">10:1</button>
+          <button class="mono" id="q100" type="button" data-v="100" aria-pressed="false">100:1</button>
+        </div>
+      </div>
+      <p class="small" id="rx" aria-live="polite"></p>
+      <div class="field">
+        <label class="switch" for="kn"><input class="sw" type="checkbox" id="kn">Soft Knee</label>
+        <p class="small">הדחיסה מתחילה בהדרגה, כבר &#x2066;5 dB&#x2069; מתחת ל-Threshold. רואים את זה בעקומת המעבר, בתחתית העמוד.</p>
+      </div>
+      <div class="field">
+        <label class="switch" for="mk"><input class="sw" type="checkbox" id="mk" checked>Makeup Gain<output id="mkv" for="mk"></output></label>
+        <p class="small">מחושב אוטומטית, כך שהתנועה החזקה חוזרת ל-&#x2066;0 dB&#x2069;.</p>
+      </div>
+      <div class="field">
+        <div class="row"><label for="cl">רמת העיצורים</label><input type="range" id="cl" min="-30" max="-4" step="1" value="-25"><output id="clo" for="cl"></output></div>
+        <p class="small">ביחס לתנועה. מעל &#x2066;-8 dB&#x2069; העיצור חוצה את ה-Threshold ונדחס בעצמו, כמו סיבילנט חזק או פיצוץ של P.</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="תוצאות">
+      <div class="results">
+        <div class="res" id="r-v"><span><i class="k-v"></i>הנחתה בתנועות</span><b id="m1"></b></div>
+        <div class="res" id="r-c"><span><i class="k-c"></i>הנחתה בעיצורים</span><b id="m2"></b></div>
+        <div class="res" id="r-gap"><span>פער תנועה–עיצור</span><b id="m3"></b></div>
+        <div class="res" id="r-q"><span>הנחתה במילה השקטה</span><b id="m4"></b></div>
+      </div>
+      <p class="small" id="qnote"></p>
+    </section>
+  </div>
+
+  <details id="advd">
+    <summary>עקומת המעבר <small>יציאה מול כניסה, לפי ה-Ratio וה-Knee</small></summary>
+    <div class="adv one">
+      <section class="panel" aria-label="עקומת המעבר">
+        <div class="mini">
+          <div id="twrap"><canvas id="tc" role="img" aria-label="עקומת המעבר של הקומפרסור: עוצמת היציאה מול עוצמת הכניסה, לפני Makeup Gain, עם סימון ה-Threshold">עקומת המעבר של הקומפרסור.</canvas></div>
+          <ul class="tlist">
+            <li><span><i class="d-v"></i>תנועה חזקה</span><b id="t1"></b></li>
+            <li><span><i class="d-q"></i>תנועה במילה השקטה</span><b id="t2"></b></li>
+            <li><span><i class="d-c"></i>עיצור</span><b id="t3"></b></li>
+            <li><small>כניסה ← יציאה במצב יציב, לפני Makeup Gain. האלכסון המקווקו הוא אות בלי דחיסה.</small></li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </details>
+
+  <details>
+    <summary>על המודל <small>ההדמיה ממחישה עיקרון ואינה מדידה</small></summary>
+    <div class="about">
+      <p class="small">קבועים: Threshold של &#x2066;-8 dB&#x2069;. ההדמיה פועלת על מעטפת העוצמה ולא על צורת הגל, ולכן לא רואים בה עיוות. ה-Attack וה-Release הם קבועי זמן, כלומר הזמן שבו ה-Gain עובר כ-63% מהדרך, כמו בסימולטור הבס. קומפרסורים אמיתיים מגדירים את הזמנים אחרת זה מזה ולא בהכרח מתנהגים כמו המודל. ב-Soft Knee הברך ברוחב &#x2066;10 dB&#x2069; סביב ה-Threshold, ערך שנבחר להמחשה.</p>
+      <p class="small">הצליל מסונתז: טון דמוי קול לתנועות, ורעש לעיצורים, לנשימה ולזליגה, באותן עוצמות שבגרף. זה לא זמר אמיתי, וההבדלים בין כניסה ליציאה עדינים. מומלץ להאזין באוזניות או ברמקולים טובים.</p>
+      <p class="small">משכי העיצור (&#x2066;65 ms&#x2069;), התנועה (&#x2066;100 ms&#x2069;), ההברה (כ-&#x2066;300 ms&#x2069;) והמילה (כ-&#x2066;600 ms&#x2069;) הם נתוני דיבור מתוך Master Handbook of Acoustics, פרק 28, והפער של &#x2066;25 dB&#x2069; בין תנועה לעיצור מפרק 11. מבנה המשפט, רמות הנשימה והזליגה והמודל עצמו אינם מחומרי הקורס.</p>
+    </div>
+  </details>
+</div>
+<script>
+(function(){
+/*PURE*/
+var FS=10000,THR=-8,KNEE=10,FLOOR=-40,BREATH=-30,QUIET=-8;
+function gcomp(x,ratio,knee){
+  var s=1-1/ratio,d=x-THR;
+  if(!knee)return Math.max(d,0)*s;
+  if(2*d<-KNEE)return 0;
+  if(2*d<=KNEE)return s*(d+KNEE/2)*(d+KNEE/2)/(2*KNEE);
+  return d*s;
+}
+function aOf(v){return 0.1*Math.pow(10,v/10000*3.3)}
+function rOf(v){return 10*Math.pow(10,v/10000*2.3)}
+function vOfA(a){return Math.round(Math.log10(a/0.1)/3.3*10000)}
+function vOfR(r){return Math.round(Math.log10(r/10)/2.3*10000)}
+function build(V,cons){
+  var segs=[],t=0;
+  function add(type,dur,lvl,word){segs.push({type:type,t0:t,t1:t+dur,lvl:lvl,word:word});t+=dur;}
+  function word(w,base){
+    add('c',65,base+cons,w);add('v',V,base,w);add('c',65,base+cons,w);
+    add('g',70,FLOOR,w);
+    add('c',65,base+cons,w);add('v',V,base,w);add('c',65,base+cons,w);
+  }
+  add('g',60,FLOOR,0);
+  word(1,0);
+  add('g',50,FLOOR,0);add('b',140,BREATH,0);add('g',70,FLOOR,0);
+  word(2,QUIET);
+  add('g',200,FLOOR,0);
+  return{segs:segs,total:t};
+}
+function sim(p,att,rel,ratio,knee){
+  ratio=ratio||4;
+  var N=Math.round(p.total*FS/1000),x=new Float32Array(N),gr=new Float32Array(N);
+  var aS=Math.exp(-1/(0.003*FS)),aA=Math.exp(-1/(att*1e-3*FS)),aR=Math.exp(-1/(rel*1e-3*FS));
+  var si=0,lv=FLOOR,g=0,n,segs=p.segs;
+  for(n=0;n<N;n++){
+    var t=n*1000/FS;while(si<segs.length-1&&t>=segs[si].t1)si++;
+    lv=aS*lv+(1-aS)*segs[si].lvl;x[n]=lv;
+    var tg=gcomp(lv,ratio,knee),a=tg>g?aA:aR;g=a*g+(1-a)*tg;gr[n]=g;
+  }
+  function mean(type,w){var s=0,c=0,i,k;for(k=0;k<segs.length;k++){if(segs[k].type!==type||segs[k].word!==w)continue;
+    var i0=Math.round(segs[k].t0*FS/1000),i1=Math.min(N,Math.round(segs[k].t1*FS/1000));for(i=i0;i<i1;i++){s+=gr[i];c++;}}return c?s/c:0;}
+  return{x:x,gr:gr,N:N,grV:mean('v',1),grC:mean('c',1),grQ:mean('v',2),grB:mean('b',0)};
+}
+function prng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var VOW=[{f:220,F:[730,1090,2440]},{f:196,F:[530,1840,2480]},{f:196,F:[730,1090,2440]},{f:165,F:[570,840,2410]}],MASTER=0.2;
+function harm(v){var B=[90,110,170],g=[1,0.6,0.3],A=[],k,i,s=0;for(k=1;k*v.f<=5000;k++){var a=0;for(i=0;i<3;i++)a+=g[i]/Math.sqrt(1+Math.pow((k*v.f-v.F[i])/B[i],2));a/=k;A.push(a);s+=a*a/2;}s=Math.sqrt(s);return A.map(function(a){return a/s})}
+function synth(p,sr){
+  var N=Math.round(p.total*sr/1000),y=new Float32Array(N),segs=p.segs,rnd=prng(7);
+  var aW=Math.exp(-1/(0.003*sr)),lv=FLOOR,wv=0,wc=0,wb=0,si=0,vi=-1,ph=0,f0=VOW[0].f,H=harm(VOW[0]),pv=0,lb=0,lg=0,n,k,cur=null;
+  for(n=0;n<N;n++){
+    var t=n*1000/sr;while(si<segs.length-1&&t>=segs[si].t1)si++;
+    var s=segs[si];
+    if(s!==cur){cur=s;if(s.type==='v'){vi=(vi+1)%VOW.length;H=harm(VOW[vi]);f0=VOW[vi].f;ph=0;}}
+    lv=aW*lv+(1-aW)*s.lvl;
+    wv=aW*wv+(1-aW)*(s.type==='v'?1:0);wc=aW*wc+(1-aW)*(s.type==='c'?1:0);wb=aW*wb+(1-aW)*(s.type==='b'?1:0);
+    var wg=Math.max(0,1-wv-wc-wb),x0=rnd()*2-1;
+    ph+=2*Math.PI*f0*(1+0.012*Math.sin(2*Math.PI*5.5*t/1000))/sr;
+    var v=0;if(wv>0.001)for(k=0;k<H.length;k++)v+=H[k]*Math.sin((k+1)*ph+k*k*0.9);
+    var c=(x0-pv)*1.2247;pv=x0;
+    lb+=0.12*(x0-lb);lg+=0.03*(x0-lg);
+    y[n]=Math.pow(10,lv/20)*(wv*v+wc*c+wb*lb*6.85+wg*lg*14.0);
+  }
+  return y;
+}
+function mixdown(src,r,mk,sr,wet){
+  var N=src.length,o=new Float32Array(N),n;
+  for(n=0;n<N;n++){var g=1;if(wet){var q=n*FS/sr,i=Math.min(r.N-1,q|0),j=Math.min(r.N-1,i+1),gv=r.gr[i]+(r.gr[j]-r.gr[i])*(q-i);g=Math.pow(10,(mk-gv)/20);}
+    var v=src[n]*MASTER*g;o[n]=v>1?1:v<-1?-1:v;}
+  return o;
+}
+/*END*/
+var $=function(id){return document.getElementById(id)};
+var cv=$('cv'),wrap=$('wrap'),ctx=cv.getContext('2d');
+var S={p:null,r:null,mk:6,cur:0,auto:true,playing:false,raf:0,t0:0,rate:100,ratio:4,knee:false,cons:-25,drag:false,step:0},G={L:46,R:300};
+function U(s){return'⁦'+s+'⁩'}
+var RX={
+  2:'דחיסה עדינה: על כל '+U('2 dB')+' מעל ה-Threshold יוצא '+U('1 dB')+'. התנועה החזקה מונחתת ב-'+U('4 dB')+' לכל היותר, ולכן גם ההשפעה של ה-Attack וה-Release קטנה.',
+  4:'נקודת הפתיחה, והקצה העליון של הטווח הטיפוסי לקומפרסור (1.5:1 עד 4:1). התנועה החזקה מונחתת ב-'+U('6 dB')+' לכל היותר.',
+  8:'דחיסה חזקה, על גבול ה-Limiting. התנועה החזקה מונחתת ב-'+U('7 dB')+' לכל היותר, רק '+U('1 dB')+' יותר מאשר ב-4:1.',
+  10:'בתחום ה-Limiting. התנועה החזקה מונחתת ב-'+U('7.2 dB')+' לכל היותר. ההבדל מ-8:1 כמעט לא נראה בגרף.',
+  100:'קרוב ל-Brick Wall: מתוך '+U('8 dB')+' מעל ה-Threshold יוצאים פחות מעשירית dB. כל מה שמעל ה-Threshold יוצא כמעט באותה עוצמה.'
+};
+var STEPS=[
+  {t:'מכירים את הגרף',a:15,r:150,q:4,hot:'',
+   x:'משפט של שתי מילים, מילה חזקה ואחריה מילה שקטה, ונשימה ביניהן. למעלה העוצמה: הקו המקווקו הוא הכניסה לקומפרסור, והקו הרציף הוא היציאה. למטה ה-Gain Reduction.',
+   w:'הזיזו את העכבר על הגרף. כדי לשמוע, לחצו על "כניסה" או "יציאה" ליד "השמע", ועברו ביניהן תוך כדי נגינה.'},
+  {t:'Release קצר',a:15,r:50,q:4,hot:'r-gap',
+   x:'Release של '+U('50 ms')+'. ה-Gain חוזר ברובו עוד בזמן העיצור, ולכן העיצור כמעט לא מונחת והפער בינו לבין התנועה קטן. המחיר נראה בין המילים: הנשימה והזליגה עולות.',
+   w:'שימו לב לפער בין תנועה לעיצור. ביציאה, האזינו לנשימה שבין המילים.'},
+  {t:'Release ארוך',a:15,r:800,q:4,hot:'r-q',
+   x:'Release של '+U('800 ms')+'. ה-Gain נשאר למטה לאורך כל המילה, ולא מספיק לחזור עד המילה השקטה. היא מונחתת, אף שהיא עצמה לא חוצה את ה-Threshold.',
+   w:'שימו לב להנחתה במילה השקטה. האזינו למילה השנייה: ביציאה היא חלשה יותר.'},
+  {t:'Attack ארוך',a:100,r:150,q:4,hot:'r-v',
+   x:'Attack של '+U('100 ms')+'. גם התנועה נמשכת '+U('100 ms')+', ולכן ההנחתה לא מספיקה להיבנות לפני שהתנועה נגמרת. הקומפרסור עובד רק חלקית.',
+   w:'שימו לב להנחתה בתנועות.'},
+  {t:'מהיר ומהיר',a:1,r:10,q:4,hot:'r-gap',
+   x:'Attack של '+U('1 ms')+' ו-Release של '+U('10 ms')+'. ה-Gain עוקב כמעט בדיוק אחרי המעטפת, והפער קטן יותר מבכל מצב אחר. יש לזה מחיר: הנשימה והזליגה עולות, וקומפרסור אמיתי כבר מעוות בזמנים כאלה את התדרים הנמוכים של הקול. את העיוות רואים בסימולטור הבס, לא כאן.',
+   w:'שימו לב לפער. ביציאה, האזינו לנשימה ולרעש שבין המילים.'},
+  {t:'Ratio גבוה',a:15,r:150,q:10,hot:'r-v',
+   x:'Ratio של 10:1 במקום 4:1. ההנחתה המרבית בתנועה החזקה גדלה, אבל לא בהרבה: מ-'+U('6 dB')+' ל-'+U('7.2 dB')+'. נסו גם 2:1 ו-100:1. רוב ההבדל נמצא בין 2:1 ל-8:1.',
+   w:'שימו לב להנחתה בתנועות כשמחליפים Ratio.'},
+  {t:'עכשיו אתם',a:15,r:150,q:4,hot:'',
+   x:'כוונו לבד את ה-Attack, ה-Release וה-Ratio. נסו למצוא כיוון שמקטין את הפער בין תנועה לעיצור, בלי להנחית את המילה השקטה ובלי להעלות את הנשימה יותר מדי.',
+   w:'אפשר לשנות גם את הקצב ואת רמת העיצורים, ולפתוח את עקומת המעבר בתחתית העמוד.'}
+];
+var NAMES={v:'תנועה',c:'עיצור',b:'נשימה',g:'הפסקה'};
+function fmt(x){return x<10?x.toFixed(1):String(Math.round(x))}
+function f1(v){return(Math.abs(v)<0.05?0:v).toFixed(1)}
+function tok(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
+function rgba(hex,a){var h=hex.replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);return'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
+function setP(el){var mn=+el.min,mx=+el.max;el.style.setProperty('--p',((+el.value-mn)/(mx-mn)*100)+'%')}
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+function drawCurve(){
+  var tw=$('twrap'),tc=$('tc'),c=tc.getContext('2d'),dpr=window.devicePixelRatio||1,W=tw.clientWidth,H=tw.clientHeight;
+  if(!W)return;
+  tc.style.width=W+'px';tc.style.height=H+'px';tc.width=Math.round(W*dpr);tc.height=Math.round(H*dpr);c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  var cScr=tok('--scr'),cFg=tok('--scr-fg'),cMut=tok('--scr-muted'),cLine=tok('--scr-line'),cIn=tok('--in'),cOut=tok('--out'),cV=tok('--vowel'),cC=tok('--cons');
+  var L=34,T=8,R=W-6,B=T+(R-L),lo=-40,hi=4,d;
+  var PX=function(v){return L+(v-lo)/(hi-lo)*(R-L)},PY=function(v){return B-(v-lo)/(hi-lo)*(B-T)};
+  c.lineWidth=1;c.strokeStyle=cLine;c.beginPath();
+  [-36,-24,-12,0].forEach(function(v){var x=Math.round(PX(v))+.5,y=Math.round(PY(v))+.5;c.moveTo(x,T);c.lineTo(x,B);c.moveTo(L,y);c.lineTo(R,y);});
+  c.rect(L+.5,T+.5,R-L-1,B-T-1);c.stroke();
+  c.setLineDash([5,4]);c.strokeStyle=cIn;c.lineWidth=1.5;c.beginPath();c.moveTo(PX(lo),PY(lo));c.lineTo(PX(hi),PY(hi));c.stroke();
+  c.setLineDash([5,5]);c.strokeStyle=cMut;c.lineWidth=1;c.beginPath();c.moveTo(PX(THR),T);c.lineTo(PX(THR),B);c.stroke();c.setLineDash([]);
+  c.lineJoin='round';c.lineWidth=2.25;c.strokeStyle=cOut;c.shadowColor=rgba(cOut,0.55);c.shadowBlur=8;c.beginPath();
+  for(d=lo;d<=hi+1e-6;d+=0.25){var y=PY(d-gcomp(d,S.ratio,S.knee));if(d===lo)c.moveTo(PX(d),y);else c.lineTo(PX(d),y);}c.stroke();c.shadowBlur=0;
+  [[S.cons,cC],[QUIET,cFg],[0,cV]].forEach(function(q){var x=PX(q[0]),yy=PY(q[0]-gcomp(q[0],S.ratio,S.knee));
+    c.beginPath();c.arc(x,yy,6.5,0,Math.PI*2);c.fillStyle=cScr;c.fill();c.beginPath();c.arc(x,yy,4.5,0,Math.PI*2);c.fillStyle=q[1];c.fill();});
+  c.fillStyle=cMut;c.font='500 10.5px "IBM Plex Mono", "Courier New", monospace';
+  c.textAlign='right';c.textBaseline='middle';[-36,-24,-12,0].forEach(function(v){c.fillText(String(v),L-6,PY(v));});
+  c.textAlign='center';c.textBaseline='top';[-36,-24,-12,0].forEach(function(v){c.fillText(String(v),PX(v),B+6);});
+  c.textAlign='left';c.fillText('OUT dB',L+6,T+6);c.fillText('THR',PX(THR)+5,T+20);
+  c.textAlign='right';c.textBaseline='bottom';c.fillText('IN dB',R-5,B-5);
+}
+function update(){
+  var att=aOf(+$('at').value),rel=rOf(+$('rl').value),cons=+$('cl').value;
+  S.knee=$('kn').checked;S.cons=cons;
+  var makeup=gcomp(0,S.ratio,S.knee);
+  S.mk=$('mk').checked?makeup:0;
+  $('mkv').textContent=makeup.toFixed(1)+' dB';
+  $('rx').textContent=RX[S.ratio];
+  $('qnote').textContent='הנחתה ופער: ממוצע על המילה החזקה. '+(S.knee?'ב-Soft Knee המילה השקטה נדחסת מעט גם בעצמה.':'המילה השקטה נמצאת בדיוק ב-Threshold, כך שכל הנחתה שלה היא שארית מהמילה שלפניה.');
+  [[0,'t1'],[QUIET,'t2'],[cons,'t3']].forEach(function(q){$(q[1]).textContent=f1(q[0])+' → '+f1(q[0]-gcomp(q[0],S.ratio,S.knee))+' dB'});
+  ['q2','q4','q8','q10','q100'].forEach(function(id){var b=$(id);b.setAttribute('aria-pressed',+b.getAttribute('data-v')===S.ratio?'true':'false')});
+  ['r1','r2','r3'].forEach(function(id){var b=$(id);b.setAttribute('aria-pressed',+b.getAttribute('data-v')===S.rate?'true':'false')});
+  ['at','rl','cl'].forEach(function(id){setP($(id))});
+  $('ato').textContent=fmt(att)+' ms';$('rlo').textContent=fmt(rel)+' ms';$('clo').textContent=cons+' dB';
+  S.p=build(S.rate,cons);S.r=sim(S.p,att,rel,S.ratio,S.knee);
+  if(S.auto){var s=S.p.segs[3];S.cur=(s.t0+s.t1)/2;}else S.cur=Math.min(S.cur,S.p.total);
+  if(S.playing)S.t0=0;
+  var r=S.r,gap0=-cons,gap1=gap0-(r.grV-r.grC);
+  $('m1').textContent=r.grV.toFixed(1)+' dB';
+  $('m2').textContent=r.grC.toFixed(1)+' dB';
+  $('m3').textContent=gap0+' → '+gap1.toFixed(1)+' dB';
+  $('m4').textContent=r.grQ.toFixed(1)+' dB';
+  render();drawCurve();refreshAudio();
+}
+function segAt(t){var segs=S.p.segs,k;for(k=0;k<segs.length;k++)if(t<segs[k].t1)return segs[k];return segs[segs.length-1]}
+function render(){
+  var p=S.p,r=S.r,mk=S.mk;if(!p)return;
+  var dpr=window.devicePixelRatio||1,W=wrap.clientWidth,H=wrap.clientHeight;
+  if(!W)return;
+  cv.style.width=W+'px';cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  var cScr=tok('--scr'),cFg=tok('--scr-fg'),cMut=tok('--scr-muted'),cLine=tok('--scr-line'),cIn=tok('--in'),cOut=tok('--out'),cGr=tok('--gr'),cV=tok('--vowel'),cC=tok('--cons'),cB=tok('--breath');
+  var L=46,R=W-10,bot=H-24,grH=Math.round(H*0.2),g0=bot-grH,gs=grH/12,sT=26,sB=40,yT=56,yB=g0-28;
+  G.L=L;G.R=R;
+  var TOPDB=8,BOTDB=-44,LY=function(db){return yT+(TOPDB-Math.max(Math.min(db,TOPDB),BOTDB))/(TOPDB-BOTDB)*(yB-yT)};
+  var X=function(ms){return L+ms/p.total*(R-L)},XI=function(i){return L+i/(r.N-1)*(R-L)},i,k,yy,s;
+  var mono='500 11px "IBM Plex Mono", "Courier New", monospace',heb='500 12.5px "IBM Plex Sans Hebrew", "Segoe UI", Arial, sans-serif';
+  var w1a=1e9,w1b=0,w2a=1e9,w2b=0;p.segs.forEach(function(q){if(q.word===1){w1a=Math.min(w1a,q.t0);w1b=Math.max(w1b,q.t1);}if(q.word===2){w2a=Math.min(w2a,q.t0);w2b=Math.max(w2b,q.t1);}});
+  ctx.font=heb;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=cMut;
+  ctx.fillText('מילה חזקה',X((w1a+w1b)/2),9);ctx.fillText('מילה שקטה',X((w2a+w2b)/2),9);
+  ctx.strokeStyle=cLine;ctx.lineWidth=1;ctx.beginPath();
+  [[w1a,w1b],[w2a,w2b]].forEach(function(w){ctx.moveTo(X(w[0])+.5,22);ctx.lineTo(X(w[0])+.5,19.5);ctx.lineTo(X(w[1])-.5,19.5);ctx.lineTo(X(w[1])-.5,22);});ctx.stroke();
+  for(k=0;k<p.segs.length;k++){s=p.segs[k];if(s.type==='g')continue;
+    var c=s.type==='v'?cV:s.type==='c'?cC:cB,x0=X(s.t0),x1=X(s.t1),a=s.type==='c'?0.13:0.07;
+    ctx.fillStyle=c;rr(x0+1,sT,Math.max(1,x1-x0-2),sB-sT,3);ctx.fill();
+    ctx.fillStyle=rgba(c,a);ctx.fillRect(x0,yT,x1-x0,yB-yT);ctx.fillRect(x0,g0,x1-x0,bot-g0);}
+  ctx.lineWidth=1;ctx.strokeStyle=cLine;ctx.beginPath();
+  [0,-12,-24,-36].forEach(function(d){var y=Math.round(LY(d))+.5;ctx.moveTo(L,y);ctx.lineTo(R,y);});
+  [g0,g0+6*gs,bot].forEach(function(y){y=Math.round(y)+.5;ctx.moveTo(L,y);ctx.lineTo(R,y);});ctx.stroke();
+  ctx.setLineDash([5,5]);ctx.strokeStyle=cMut;ctx.beginPath();ctx.moveTo(L,LY(THR));ctx.lineTo(R,LY(THR));ctx.stroke();ctx.setLineDash([]);
+  var st=Math.max(1,Math.floor(r.N/1800));
+  var grad=ctx.createLinearGradient(0,yT,0,yB);grad.addColorStop(0,rgba(cOut,0.26));grad.addColorStop(1,rgba(cOut,0));
+  ctx.beginPath();ctx.moveTo(L,yB);for(i=0;i<r.N;i+=st)ctx.lineTo(XI(i),LY(r.x[i]-r.gr[i]+mk));ctx.lineTo(R,yB);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.strokeStyle=cIn;ctx.beginPath();for(i=0;i<r.N;i+=st){yy=LY(r.x[i]);if(i)ctx.lineTo(XI(i),yy);else ctx.moveTo(XI(i),yy);}ctx.stroke();ctx.setLineDash([]);
+  ctx.lineJoin='round';ctx.lineWidth=2.25;ctx.strokeStyle=cOut;ctx.shadowColor=rgba(cOut,0.55);ctx.shadowBlur=8;
+  ctx.beginPath();for(i=0;i<r.N;i+=st){yy=LY(r.x[i]-r.gr[i]+mk);if(i)ctx.lineTo(XI(i),yy);else ctx.moveTo(XI(i),yy);}ctx.stroke();ctx.shadowBlur=0;
+  var GY=function(v){return g0+Math.min(v,12)*gs};
+  ctx.beginPath();ctx.moveTo(L,g0);for(i=0;i<r.N;i+=st)ctx.lineTo(XI(i),GY(r.gr[i]));ctx.lineTo(R,g0);ctx.closePath();ctx.fillStyle=rgba(cGr,0.26);ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle=cGr;ctx.beginPath();for(i=0;i<r.N;i+=st){yy=GY(r.gr[i]);if(i)ctx.lineTo(XI(i),yy);else ctx.moveTo(XI(i),yy);}ctx.stroke();
+  ctx.fillStyle=cMut;ctx.font=mono;ctx.textBaseline='middle';ctx.textAlign='right';
+  ctx.fillText('0 dB',L-8,LY(0));ctx.fillText('-12',L-8,LY(-12));ctx.fillText('-24',L-8,LY(-24));ctx.fillText('-36',L-8,LY(-36));
+  ctx.fillText('0 dB',L-8,g0);ctx.fillText('-6',L-8,g0+6*gs);ctx.fillText('-12',L-8,bot);
+  ctx.textBaseline='bottom';ctx.textAlign='center';ctx.fillText('Threshold',X((w1b+w2a)/2),LY(THR)-4);
+  ctx.textAlign='left';ctx.fillText('Gain Reduction',L+6,bot-5);
+  var stepMs=2000;[100,200,400,500,1000].some(function(c){if((R-L)*c/p.total>=64){stepMs=c;return true;}return false;});
+  var last=Math.floor(p.total/stepMs)*stepMs;ctx.textBaseline='top';
+  for(k=0;k<=last;k+=stepMs){ctx.textAlign=k===0?'left':'center';if(k===last&&X(k)>R-40)ctx.textAlign='right';ctx.fillText(k+(k===last?' ms':''),X(k),bot+7);}
+  var t=Math.max(0,Math.min(S.cur,p.total)),ci=Math.min(r.N-1,Math.round(t*FS/1000)),cx=Math.round(X(t))+.5,o=r.x[ci]-r.gr[ci]+mk;
+  ctx.strokeStyle=rgba(cFg,0.55);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,sB+3);ctx.lineTo(cx,bot);ctx.stroke();
+  [[LY(o),cOut],[GY(r.gr[ci]),cGr]].forEach(function(d){ctx.beginPath();ctx.arc(cx,d[0],5.5,0,Math.PI*2);ctx.fillStyle=cScr;ctx.fill();ctx.beginPath();ctx.arc(cx,d[0],3.5,0,Math.PI*2);ctx.fillStyle=d[1];ctx.fill();});
+  var sg=segAt(t);
+  $('c2').textContent=NAMES[sg.type]+(sg.word===1?' במילה החזקה':sg.word===2?' במילה השקטה':'');
+  $('c5').textContent=f1(-r.gr[ci])+' dB';
+  $('grfill').style.width=(Math.min(r.gr[ci],12)/12*100)+'%';
+}
+function showStep(i,apply){
+  S.step=i;var stp=STEPS[i],k,h='';
+  $('gc').textContent=(i+1)+' / '+STEPS.length;
+  for(k=0;k<STEPS.length;k++)h+='<i'+(k<=i?' class="on"':'')+'></i>';$('gb').innerHTML=h;
+  $('gt').textContent=stp.t;$('gx').textContent=stp.x;$('gw').textContent=stp.w;
+  $('gprev').disabled=i===0;$('gnext').textContent=i===STEPS.length-1?'מההתחלה':'הבא';
+  ['r-v','r-gap','r-q'].forEach(function(id){$(id).classList.toggle('hot',id===stp.hot)});
+  if(apply){
+    S.rate=100;S.ratio=stp.q;$('cl').value=-25;$('kn').checked=false;$('mk').checked=true;
+    $('at').value=vOfA(stp.a);$('rl').value=vOfR(stp.r);
+    if(!S.playing)S.auto=true;
+    update();
+  }
+}
+var A={ctx:null,node:null,gain:null,mode:'',t0:0,dur:1,key:'',src:null,bufs:{},timer:0};
+function audioUI(){$('au-in').setAttribute('aria-pressed',A.mode==='in'?'true':'false');$('au-out').setAttribute('aria-pressed',A.mode==='out'?'true':'false')}
+function buildBufs(){
+  var sr=A.ctx.sampleRate,key=S.rate+'|'+S.cons+'|'+sr;
+  if(A.key!==key||!A.src){A.src=synth(S.p,sr);A.key=key;}
+  ['in','out'].forEach(function(m){var f=mixdown(A.src,S.r,S.mk,sr,m==='out'),b=A.ctx.createBuffer(1,f.length,sr);b.getChannelData(0).set(f);A.bufs[m]=b;});
+  A.dur=A.bufs['in'].duration;
+}
+function audioPos(){return(((A.ctx.currentTime-A.t0)%A.dur)+A.dur)%A.dur}
+function stopNode(){
+  if(!A.node)return;var now=A.ctx.currentTime,g=A.gain,n=A.node;A.node=null;
+  try{g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.02);n.stop(now+0.03);}catch(err){try{n.stop()}catch(e2){}}
+}
+function startNode(mode,off){
+  stopNode();off=((off%A.dur)+A.dur)%A.dur;
+  var now=A.ctx.currentTime,n=A.ctx.createBufferSource(),g=A.ctx.createGain();
+  n.buffer=A.bufs[mode];n.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.02);
+  n.connect(g);g.connect(A.ctx.destination);n.start(0,off);A.node=n;A.gain=g;A.t0=now-off;
+}
+function stopAudio(){if(A.ctx)stopNode();A.mode='';clearTimeout(A.timer);audioUI();}
+function atick(){if(!A.mode)return;S.cur=Math.min(S.p.total,audioPos()*1000);render();requestAnimationFrame(atick);}
+function listen(mode){
+  try{
+    if(!A.ctx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('au-msg').hidden=false;return;}A.ctx=new AC();}
+    if(A.ctx.state==='suspended')A.ctx.resume();
+    if(A.mode===mode){stopAudio();return;}
+    var was=A.mode,off=was?audioPos():0;
+    if(S.playing)setPlaying(false);
+    buildBufs();startNode(mode,off);A.mode=mode;S.auto=false;audioUI();
+    if(!was)requestAnimationFrame(atick);
+  }catch(err){A.mode='';audioUI();$('au-msg').hidden=false;}
+}
+function refreshAudio(){
+  if(!A.mode)return;clearTimeout(A.timer);
+  A.timer=setTimeout(function(){if(!A.mode)return;try{var off=audioPos();buildBufs();startNode(A.mode,off);}catch(err){stopAudio();}},140);
+}
+$('au-in').addEventListener('click',function(){listen('in')});
+$('au-out').addEventListener('click',function(){listen('out')});
+function sweep(){return Math.max(6000,S.p.total*4)}
+function tick(ts){
+  if(!S.playing)return;
+  if(!S.t0)S.t0=ts-S.cur/S.p.total*sweep();
+  S.cur=((ts-S.t0)/sweep()%1)*S.p.total;render();S.raf=requestAnimationFrame(tick);
+}
+function setPlaying(on){
+  S.playing=on;$('play').setAttribute('aria-pressed',on?'true':'false');$('ic-play').hidden=on;$('ic-stop').hidden=!on;
+  $('plt').textContent=on?'עצור':'נגן בהילוך איטי';
+  if(on){if(A.mode)stopAudio();S.auto=false;S.t0=0;if(S.cur>=S.p.total-1)S.cur=0;S.raf=requestAnimationFrame(tick);}else if(S.raf)cancelAnimationFrame(S.raf);
+}
+function tAt(e){var b=cv.getBoundingClientRect(),x=e.clientX-b.left;return Math.max(0,Math.min(1,(x-G.L)/(G.R-G.L)))*S.p.total}
+cv.addEventListener('pointerdown',function(e){if(S.playing)setPlaying(false);if(A.mode)stopAudio();S.auto=false;S.drag=true;S.cur=tAt(e);try{cv.setPointerCapture(e.pointerId)}catch(err){}render();});
+cv.addEventListener('pointermove',function(e){if(S.drag||(e.pointerType==='mouse'&&!S.playing)){S.auto=false;S.cur=tAt(e);render();}});
+['pointerup','pointercancel'].forEach(function(n){cv.addEventListener(n,function(){S.drag=false})});
+cv.addEventListener('keydown',function(e){
+  var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0,stp=e.shiftKey?50:10;
+  if(d){S.cur=Math.max(0,Math.min(S.p.total,S.cur+d*stp));}else if(e.key==='Home'){S.cur=0;}else if(e.key==='End'){S.cur=S.p.total;}else return;
+  e.preventDefault();if(S.playing)setPlaying(false);if(A.mode)stopAudio();S.auto=false;render();
+});
+$('play').addEventListener('click',function(){setPlaying(!S.playing)});
+$('gnext').addEventListener('click',function(){showStep((S.step+1)%STEPS.length,true)});
+$('gprev').addEventListener('click',function(){if(S.step>0)showStep(S.step-1,true)});
+['r1','r2','r3'].forEach(function(id){$(id).addEventListener('click',function(){S.rate=+$(id).getAttribute('data-v');update();})});
+['q2','q4','q8','q10','q100'].forEach(function(id){$(id).addEventListener('click',function(){S.ratio=+$(id).getAttribute('data-v');update();})});
+['at','rl','cl','mk','kn'].forEach(function(id){$(id).addEventListener('input',update)});
+function redraw(){render();drawCurve();}
+$('advd').addEventListener('toggle',drawCurve);
+window.addEventListener('resize',redraw);
+if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',redraw);}
+if(window.MutationObserver)new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+showStep(0,true);
+})();
+</script>
+
+</body>
+</html>
