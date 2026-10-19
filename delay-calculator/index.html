@@ -59,6 +59,13 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 .unit { color: var(--muted); font-size: .9rem; }
 .strip.full { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 8px 14px; }
 .strip.full .field { max-width: 9rem; }
+.sublbl { font-size: .8rem; color: var(--muted); letter-spacing: .03em; }
+.kind { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.kbtn { flex: 1 1 auto; font: inherit; font-size: .78rem; background: transparent; color: var(--fg); border: none; padding: 6px 8px; cursor: pointer; direction: ltr; }
+.kbtn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 500; }
+.kbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.lacount { display: grid; gap: 6px; }
+.lacount label { font-size: .8rem; color: var(--muted); }
 .presets { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
 .preset { font: inherit; font-size: .85rem; background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
 .preset[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 500; }
@@ -123,6 +130,15 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <div class="field"><input id="d1" type="number" inputmode="decimal" min="0" step="0.1" value="12"><span class="unit">מ'</span></div>
       <label for="h1">גובה המרכז האקוסטי של הרמקול</label>
       <div class="field small"><input id="h1" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
+      <span class="sublbl" id="kl1">סוג רמקול</span>
+      <div class="kind" role="group" aria-labelledby="kl1">
+        <button type="button" class="kbtn" data-spk="1" data-kind="ps" aria-pressed="true">Point Source</button>
+        <button type="button" class="kbtn" data-spk="1" data-kind="la" aria-pressed="false">Line Array</button>
+      </div>
+      <div class="lacount" id="lc1" hidden>
+        <label for="n1">מספר יחידות</label>
+        <div class="field small"><input id="n1" type="number" inputmode="numeric" min="1" max="24" step="1" value="8"></div>
+      </div>
       <span class="tag" id="t1"></span>
     </div>
     <div class="strip" id="s2">
@@ -131,6 +147,15 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <div class="field"><input id="d2" type="number" inputmode="decimal" min="0" step="0.1" value="20"><span class="unit">מ'</span></div>
       <label for="h2">גובה המרכז האקוסטי של הרמקול</label>
       <div class="field small"><input id="h2" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
+      <span class="sublbl" id="kl2">סוג רמקול</span>
+      <div class="kind" role="group" aria-labelledby="kl2">
+        <button type="button" class="kbtn" data-spk="2" data-kind="ps" aria-pressed="true">Point Source</button>
+        <button type="button" class="kbtn" data-spk="2" data-kind="la" aria-pressed="false">Line Array</button>
+      </div>
+      <div class="lacount" id="lc2" hidden>
+        <label for="n2">מספר יחידות</label>
+        <div class="field small"><input id="n2" type="number" inputmode="numeric" min="1" max="24" step="1" value="8"></div>
+      </div>
       <span class="tag" id="t2"></span>
     </div>
     <div class="strip full" id="sa">
@@ -181,7 +206,7 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 
 <script>
 const $ = id => document.getElementById(id);
-const state = { d1: 12, d2: 20, h1: 3, h2: 3, ha: 1.6, c: 343, ok: true };
+const state = { d1: 12, d2: 20, h1: 3, h2: 3, ha: 1.6, c: 343, ok: true, kind: ['ps', 'ps'], count: [8, 8] };
 const num = id => parseFloat($(id).value);
 function calc() {
   let d1 = num('d1'), d2 = num('d2');
@@ -222,6 +247,18 @@ function calc() {
   if (num('d1') < state.d1 - 0.05) $('d1').value = state.d1.toFixed(1);
   if (num('d2') < state.d2 - 0.05) $('d2').value = state.d2.toFixed(1);
 }));
+// Speaker type (only changes the drawing, not the calculation).
+document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => {
+  const i = +b.dataset.spk - 1;
+  state.kind[i] = b.dataset.kind;
+  document.querySelectorAll('.kbtn[data-spk="' + b.dataset.spk + '"]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  $('lc' + b.dataset.spk).hidden = b.dataset.kind !== 'la';
+  if (window.simUpdate) window.simUpdate();
+}));
+[1, 2].forEach(k => $('n' + k).addEventListener('input', () => {
+  const v = Math.round(num('n' + k));
+  if (v >= 1 && v <= 24) { state.count[k - 1] = v; if (window.simUpdate) window.simUpdate(); }
+}));
 // Fixed ear heights: standing 1.6 m, seated 1.2 m.
 function markPreset() {
   document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', Math.abs(num('ha') - parseFloat(b.dataset.ha)) < 0.001));
@@ -246,6 +283,12 @@ calc();
   const H = i => i === 'a' ? state.ha : i ? state.h2 : state.h1; // heights
   const RUN = 2.8, HOLD = 1.2; // seconds of animation, seconds of pause at the end
 
+  // Everything is drawn in true proportion (metres).
+  // Average cabinet sizes from manufacturer spec sheets, H x W x D:
+  const PS = { h: .538, w: .344, d: .358 };  // point source: d&b Y10P, L-Acoustics X12
+  const LA = { h: .342, w: 1.115, d: .45 };  // line array element: d&b V8, L-Acoustics K2, Adamson E15
+  const SEATED_BELOW = 1.4;                   // ear height under this draws point A seated
+
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   stage.appendChild(renderer.domElement);
@@ -262,52 +305,108 @@ calc();
 
   const hitMat = new THREE.MeshBasicMaterial({ visible: false });
   const hitGeo = new THREE.SphereGeometry(1, 12, 8);
+  const std = () => new THREE.MeshStandardMaterial({ roughness: .7 });
 
-  const listener = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshStandardMaterial({ roughness: .5 }));
-  const listenerPole = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ roughness: .8 }));
-  const listenerHit = new THREE.Mesh(hitGeo, hitMat); listenerHit.userData.who = 'a';
-  scene.add(listener, listenerPole, listenerHit);
+  // ---- Person at point A ----
+  const torsoGeo = new THREE.CylinderGeometry(.17, .15, 1, 14);
+  const headGeo = new THREE.SphereGeometry(.11, 16, 12);
+  const thighGeo = new THREE.BoxGeometry(.32, .14, .45);
+  const seatGeo = new THREE.BoxGeometry(.46, .05, .46);
+  const backGeo = new THREE.BoxGeometry(.46, .45, .05);
+  // Part transforms for a person whose ear is at height `ear`, standing or seated, facing the stage (-z).
+  function personParts(ear, seated) {
+    const parts = [];
+    if (seated) {
+      const seatY = .45;
+      parts.push(['seat', 0, seatY, 0, 1]);
+      parts.push(['back', 0, seatY + .22, .21, 1]);
+      parts.push(['thigh', 0, seatY + .09, -.18, 1]);
+      const top = ear - .14, bot = seatY + .04;
+      parts.push(['torso', 0, (top + bot) / 2, .05, Math.max(top - bot, .1)]);
+    } else {
+      const top = ear - .14;
+      parts.push(['torso', 0, top / 2, 0, Math.max(top, .1)]);
+    }
+    parts.push(['head', 0, ear, seated ? .05 : 0, 1]);
+    return parts;
+  }
+  const listener = {
+    torso: new THREE.Mesh(torsoGeo, std()), head: new THREE.Mesh(headGeo, std()),
+    thigh: new THREE.Mesh(thighGeo, std()), seat: new THREE.Mesh(seatGeo, std()), back: new THREE.Mesh(backGeo, std())
+  };
+  Object.values(listener).forEach(m => scene.add(m));
+  const listenerHit = new THREE.Mesh(hitGeo, hitMat); listenerHit.userData.who = 'a'; scene.add(listenerHit);
 
+
+  // ---- Speakers ----
+  function makeBox(dim) {
+    const g = new THREE.Group();
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(dim.w, dim.h, dim.d), std());
+    const grille = new THREE.Mesh(new THREE.PlaneGeometry(dim.w * .92, dim.h * .82), new THREE.MeshBasicMaterial());
+    grille.position.z = dim.d / 2 + .002;
+    g.add(cab, grille);
+    return { g, cab, grille };
+  }
   function makeSpeaker(i) {
     const g = new THREE.Group();
-    const cab = new THREE.Mesh(new THREE.BoxGeometry(1, 1.4, .8), new THREE.MeshStandardMaterial({ roughness: .6 }));
-    const cone = new THREE.Mesh(new THREE.CircleGeometry(.32, 24), new THREE.MeshBasicMaterial());
-    cone.position.set(0, -.15, .41);
-    g.add(cab, cone);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ roughness: .8 }));
+    const ps = makeBox(PS); g.add(ps.g);
+    const la = new THREE.Group();
+    g.add(la);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1, 10), std());
+    const rig = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]), new THREE.LineBasicMaterial());
     const hit = new THREE.Mesh(hitGeo, hitMat); hit.userData.who = i;
     const wave = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshBasicMaterial({ transparent: true, opacity: .14, depthWrite: false }));
     const ringPts = []; for (let j = 0; j <= 128; j++) { const a = j / 128 * Math.PI * 2; ringPts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); }
     const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), new THREE.LineBasicMaterial({ transparent: true }));
     const path = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ transparent: true, opacity: .55 }));
-    scene.add(g, pole, hit, wave, ring, path);
-    return { g, cab, cone, pole, hit, wave, ring, path };
+    scene.add(g, pole, rig, hit, wave, ring, path);
+    return { g, ps, la, laBoxes: [], laTop: 0, laN: 0, pole, rig, hit, wave, ring, path, flown: false };
   }
   const S = [makeSpeaker(0), makeSpeaker(1)];
+  // Build a J-shaped hang of n elements: each one tilts a little more downward than the one above.
+  function buildHang(s, n) {
+    if (s.laN === n) return;
+    s.laBoxes.forEach(b => { s.la.remove(b.g); b.cab.geometry.dispose(); b.grille.geometry.dispose(); });
+    s.laBoxes = [];
+    let py = 0, pz = 0; const centers = [];
+    for (let j = 0; j < n; j++) {
+      const b = makeBox(LA); s.la.add(b.g); s.laBoxes.push(b);
+      const a = n > 1 ? Math.pow(j / (n - 1), 2) * (16 * Math.PI / 180) : 0;
+      const cy = py - Math.cos(a) * LA.h / 2, cz = pz - Math.sin(a) * LA.h / 2;
+      b.g.position.set(0, cy, cz); b.g.rotation.x = a; centers.push(cy);
+      py -= Math.cos(a) * LA.h; pz -= Math.sin(a) * LA.h;
+    }
+    const mid = centers.reduce((t, v) => t + v, 0) / n; // acoustic centre = middle of the hang
+    s.laBoxes.forEach(b => { b.g.position.y -= mid; });
+    s.laTop = -mid; s.laN = n;
+    s.laBoxes.forEach(b => { b.cab.material.color.copy(s.cabCol || fgCol); b.grille.material.color.copy(s.color || fgCol); });
+  }
   const hits = [listenerHit, S[0].hit, S[1].hit];
-  let grid = null, accentCol = new THREE.Color('#ffb020');
+  let grid = null, accentCol = new THREE.Color('#ffb020'), fgCol = new THREE.Color('#222');
 
   function applyColors() {
-    const stageCol = new THREE.Color(css('--stage'));
-    renderer.setClearColor(stageCol);
+    const bg = new THREE.Color(css('--stage'));
+    renderer.setClearColor(bg);
     const fg = new THREE.Color(css('--fg')), muted = new THREE.Color(css('--muted'));
+    fgCol = fg.clone();
+    const cabCol = fg.clone().lerp(bg, .2);
     [css('--spk1'), css('--spk2')].forEach((hex, i) => {
       const s = S[i], c = new THREE.Color(hex); s.color = c;
-      s.cab.material.color.copy(fg).lerp(stageCol, .25);
-      s.cone.material.color.copy(c);
-      s.pole.material.color.copy(muted);
+      s.cabCol = cabCol;
+      [s.ps, ...s.laBoxes].forEach(b => { b.cab.material.color.copy(cabCol); b.grille.material.color.copy(c); });
+      s.pole.material.color.copy(muted); s.rig.material.color.copy(muted);
       s.wave.material.color.copy(c); s.ring.material.color.copy(c); s.path.material.color.copy(c);
     });
-    listener.userData.base = fg.clone(); listener.material.color.copy(fg);
-    listenerPole.material.color.copy(muted);
+    Object.values(listener).forEach(m => m.material.color.copy(fg));
     lS1.style.color = css('--spk1'); lS2.style.color = css('--spk2');
     accentCol = new THREE.Color(css('--accent'));
     buildGrid();
   }
 
-  let R = 20, K = 1, mode = 'off', playing = true, t0 = performance.now(), az = 0.45, dragging = null, lock = false;
+  let R = 20, mode = 'off', playing = true, t0 = performance.now(), az = 0.45, dragging = null, lock = false;
   const target = new THREE.Vector3();
   const pos = [new THREE.Vector3(), new THREE.Vector3()];
+  const top3 = [new THREE.Vector3(), new THREE.Vector3()];
   let sim = null;
 
   function niceStep(span) { const raw = span / 12; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
@@ -324,26 +423,47 @@ calc();
   function frameScene() {
     const pts = [P.a, P.s[0], P.s[1]];
     const cx = (pts[0].x + pts[1].x + pts[2].x) / 3, cz = (pts[0].y + pts[1].y + pts[2].y) / 3;
-    R = Math.max(3, ...pts.map(p => Math.hypot(p.x - cx, p.y - cz)) ) * 1.15;
-    K = Math.max(1, R / 10);
+    R = Math.max(3, ...pts.map(p => Math.hypot(p.x - cx, p.y - cz))) * 1.15;
     target.set(cx, (state.ha + state.h1 + state.h2) / 3 * .6, cz);
     buildGrid();
   }
 
+  function setPart(mesh, x, y, z, sy) { mesh.position.set(x, y, z); mesh.scale.set(1, sy, 1); }
+
+  function layoutVenue() {
+    const seated = state.ha < SEATED_BELOW;
+    // Point A: the person whose ear is the listening point.
+    ['seat', 'back', 'thigh'].forEach(k => { listener[k].visible = seated; });
+    personParts(state.ha, seated).forEach(([part, ox, oy, oz, sy]) => setPart(listener[part], P.a.x + ox, oy, P.a.y + oz, sy));
+  }
+
   function layout() {
-    const k = K;
+    const hitR = Math.max(.9, R / 10);
     S.forEach((s, i) => {
-      pos[i].set(P.s[i].x, H(i), P.s[i].y);
-      s.g.position.copy(pos[i]); s.g.scale.setScalar(k * .8); s.g.rotation.set(0, 0, 0);
-      const top = H(i) - .7 * k * .8;
-      s.pole.scale.set(.05 * k, Math.max(top, .01), .05 * k); s.pole.position.set(pos[i].x, Math.max(top, .01) / 2, pos[i].z);
-      s.hit.position.copy(pos[i]); s.hit.scale.setScalar(1.3 * k);
+      const h = H(i);
+      pos[i].set(P.s[i].x, h, P.s[i].y);
+      s.g.position.copy(pos[i]);
+      s.flown = state.kind[i] === 'la';
+      if (s.flown) buildHang(s, state.count[i]);
+      s.ps.g.visible = !s.flown; s.la.visible = s.flown;
+      if (s.flown) {
+        s.pole.visible = false; s.rig.visible = true;
+        const topY = h + s.laTop;
+        s.rig.geometry.setFromPoints([new THREE.Vector3(pos[i].x, topY, pos[i].z), new THREE.Vector3(pos[i].x, topY + 2.5, pos[i].z)]);
+        top3[i].set(pos[i].x, topY, pos[i].z);
+      } else {
+        s.rig.visible = false;
+        const bottom = h - PS.h / 2;
+        s.pole.visible = bottom > .02;
+        s.pole.scale.set(1, Math.max(bottom, .01), 1); s.pole.position.set(pos[i].x, Math.max(bottom, .01) / 2, pos[i].z);
+        top3[i].set(pos[i].x, h + PS.h / 2, pos[i].z);
+      }
+      s.hit.position.copy(pos[i]); s.hit.scale.setScalar(hitR);
       s.path.geometry.setFromPoints([pos[i].clone(), new THREE.Vector3(P.a.x, state.ha, P.a.y)]);
       s.ring.position.set(pos[i].x, state.ha, pos[i].z); s.wave.position.copy(pos[i]);
     });
-    listener.position.set(P.a.x, state.ha, P.a.y);
-    listenerPole.scale.set(.04 * k, Math.max(state.ha, .01), .04 * k); listenerPole.position.set(P.a.x, Math.max(state.ha, .01) / 2, P.a.y);
-    listenerHit.position.copy(listener.position); listenerHit.scale.setScalar(1.3 * k);
+    listenerHit.position.set(P.a.x, state.ha * .6, P.a.y); listenerHit.scale.setScalar(hitR);
+    layoutVenue();
     lD1.textContent = state.d1.toFixed(1) + " מ'"; lD2.textContent = state.d2.toFixed(1) + " מ'";
   }
 
@@ -421,7 +541,7 @@ calc();
     cv.setPointerCapture(e.pointerId);
     if (h) {
       dragging = { who: h.object.userData.who };
-      plane.constant = -H(dragging.who);
+      plane.constant = -(dragging.who === 'a' ? state.ha * .6 : H(dragging.who));
       if (ray.ray.intersectPlane(plane, hitPt)) {
         const p = dragging.who === 'a' ? P.a : P.s[dragging.who];
         dragging.off = new THREE.Vector2(p.x - hitPt.x, p.y - hitPt.z);
@@ -468,6 +588,7 @@ calc();
     el.style.visibility = tmp.z < 1 ? 'visible' : 'hidden';
   }
 
+  const flashCol = new THREE.Color();
   function frame(now) {
     requestAnimationFrame(frame);
     if (!sim) return;
@@ -494,24 +615,26 @@ calc();
         const fade = Math.max(0, 1 - Math.max(0, r - d) / (R * .6));
         s.wave.material.opacity = .13 * fade; s.ring.material.opacity = .9 * fade;
       }
-      s.cone.scale.setScalar(tMs >= sim.emit[i] && tMs - sim.emit[i] < sim.tEnd * .06 ? 1.35 : 1);
+      // The grille lights up while the speaker is sending.
+      const sending = tMs >= sim.emit[i] && tMs - sim.emit[i] < sim.tEnd * .08;
+      flashCol.copy(s.color); if (sending) flashCol.lerp(new THREE.Color(1, 1, 1), .55);
+      [s.ps, ...s.laBoxes].forEach(b => b.grille.material.color.copy(flashCol));
       const since = tMs - sim.arrive[i];
       if (since >= 0 && since < sim.tEnd * .12) flash[i] = 1;
     });
     const both = Math.abs(sim.arrive[0] - sim.arrive[1]) < sim.tEnd * .01;
-    const base = listener.userData.base || new THREE.Color('#888');
-    if (flash[0] && flash[1] && both) listener.material.color.copy(accentCol);
-    else if (flash[0]) listener.material.color.copy(S[0].color);
-    else if (flash[1]) listener.material.color.copy(S[1].color);
-    else listener.material.color.copy(base);
-    const k = K;
-    listener.scale.setScalar(.28 * k * (flash[0] || flash[1] ? (both && flash[0] && flash[1] ? 1.8 : 1.4) : 1));
+    let col = fgCol;
+    if (flash[0] && flash[1] && both) col = accentCol;
+    else if (flash[0]) col = S[0].color;
+    else if (flash[1]) col = S[1].color;
+    listener.head.material.color.copy(col); listener.torso.material.color.copy(col);
+    listener.head.scale.setScalar(flash[0] || flash[1] ? (both && flash[0] && flash[1] ? 2.2 : 1.7) : 1);
 
     renderer.render(scene, camera);
     const A3 = new THREE.Vector3(P.a.x, state.ha, P.a.y);
-    place(lA, A3.clone().add(new THREE.Vector3(0, .5 * k, 0)));
-    place(lS1, pos[0].clone().add(new THREE.Vector3(0, .9 * k, 0)));
-    place(lS2, pos[1].clone().add(new THREE.Vector3(0, .9 * k, 0)));
+    place(lA, A3.clone().add(new THREE.Vector3(0, .45, 0)));
+    place(lS1, top3[0].clone().add(new THREE.Vector3(0, .4, 0)));
+    place(lS2, top3[1].clone().add(new THREE.Vector3(0, .4, 0)));
     place(lD1, pos[0].clone().add(A3).multiplyScalar(.5));
     place(lD2, pos[1].clone().add(A3).multiplyScalar(.5));
   }
