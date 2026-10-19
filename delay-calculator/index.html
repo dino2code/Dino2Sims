@@ -59,6 +59,10 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 .unit { color: var(--muted); font-size: .9rem; }
 .strip.full { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 8px 14px; }
 .strip.full .field { max-width: 9rem; }
+.presets { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+.preset { font: inherit; font-size: .85rem; background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.preset[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 500; }
+.preset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .field.small input[type="number"] { font-size: 1.1rem; }
 .tag { font-size: .75rem; font-weight: 500; color: var(--accent); min-height: 1em; }
 
@@ -133,6 +137,10 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <span class="name">נקודה א'</span>
       <label for="ha">גובה האוזן</label>
       <div class="field small"><input id="ha" type="number" inputmode="decimal" min="0" step="0.1" value="1.6"><span class="unit">מ'</span></div>
+      <div class="presets" role="group" aria-label="גובה אוזן קבוע">
+        <button type="button" class="preset" data-ha="1.6">עמידה 1.6</button>
+        <button type="button" class="preset" data-ha="1.2">ישיבה 1.2</button>
+      </div>
     </div>
   </div>
 
@@ -214,6 +222,17 @@ function calc() {
   if (num('d1') < state.d1 - 0.05) $('d1').value = state.d1.toFixed(1);
   if (num('d2') < state.d2 - 0.05) $('d2').value = state.d2.toFixed(1);
 }));
+// Fixed ear heights: standing 1.6 m, seated 1.2 m.
+function markPreset() {
+  document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', Math.abs(num('ha') - parseFloat(b.dataset.ha)) < 0.001));
+}
+document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => {
+  $('ha').value = b.dataset.ha;
+  $('ha').dispatchEvent(new Event('input'));
+  $('ha').dispatchEvent(new Event('change'));
+}));
+$('ha').addEventListener('input', markPreset);
+markPreset();
 calc();
 </script>
 <script>
