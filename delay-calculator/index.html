@@ -60,6 +60,7 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 .strip.full { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 8px 14px; }
 .strip.full .field { max-width: 9rem; }
 .field.small input[type="number"] { font-size: 1.1rem; }
+.fhint { font-size: .72rem; color: var(--muted); line-height: 1.4; }
 .tag { font-size: .75rem; font-weight: 500; color: var(--accent); min-height: 1em; }
 
 .readout { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
@@ -117,16 +118,18 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <span class="name">רמקול 1<span class="dot c1" aria-hidden="true"></span></span>
       <label for="d1">מרחק ישיר מנקודה א'</label>
       <div class="field"><input id="d1" type="number" inputmode="decimal" min="0" step="0.1" value="12"><span class="unit">מ'</span></div>
-      <label for="h1">גובה הרמקול</label>
-      <div class="field small"><input id="h1" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
+      <label for="h1">גובה מרכז הרמקול מהרצפה</label>
+      <div class="field small"><input id="h1" type="number" inputmode="decimal" min="0" step="0.1" value="3" aria-describedby="hh1"><span class="unit">מ'</span></div>
+      <span class="fhint" id="hh1">הנקודה שממנה יוצא הצליל, בערך אזור הדרייברים. במערך תלוי: מרכז החלק שמכוון לנקודה א'.</span>
       <span class="tag" id="t1"></span>
     </div>
     <div class="strip" id="s2">
       <span class="name">רמקול 2<span class="dot c2" aria-hidden="true"></span></span>
       <label for="d2">מרחק ישיר מנקודה א'</label>
       <div class="field"><input id="d2" type="number" inputmode="decimal" min="0" step="0.1" value="20"><span class="unit">מ'</span></div>
-      <label for="h2">גובה הרמקול</label>
-      <div class="field small"><input id="h2" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
+      <label for="h2">גובה מרכז הרמקול מהרצפה</label>
+      <div class="field small"><input id="h2" type="number" inputmode="decimal" min="0" step="0.1" value="3" aria-describedby="hh2"><span class="unit">מ'</span></div>
+      <span class="fhint" id="hh2">הנקודה שממנה יוצא הצליל, בערך אזור הדרייברים. במערך תלוי: מרכז החלק שמכוון לנקודה א'.</span>
       <span class="tag" id="t2"></span>
     </div>
     <div class="strip full" id="sa">
