@@ -33,6 +33,8 @@ body {
   padding-block: 24px 40px;
 }
 .wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
+.back { display: inline-block; margin-bottom: 10px; color: var(--muted); text-decoration: none; font-size: .9rem; padding: 4px 0; }
+.back:hover, .back:focus-visible { color: var(--accent); }
 h1 { font-size: 1.6rem; margin: 0; font-weight: 700; text-wrap: balance; }
 .sub { margin: 4px 0 0; color: var(--muted); line-height: 1.5; }
 
@@ -76,6 +78,7 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 
 <div class="wrap" dir="rtl">
   <header>
+    <a class="back" href="../">→ כל הסימולטורים</a>
     <h1>מחשבון דיליי רמקולים</h1>
     <p class="sub">הכנס את המרחק מנקודת ההאזנה (נקודה א') לכל רמקול. הרמקול הקרוב יותר מקדים, ולו צריך לתת דיליי.</p>
   </header>
