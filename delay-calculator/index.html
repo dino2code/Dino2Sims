@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מחשבון דיליי רמקולים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow console-strip column — inputs as two channel strips, big readout below */
+:root {
+  --bg: #eef1f3;
+  --panel: #ffffff;
+  --fg: #1a2228;
+  --muted: #5e6b74;
+  --line: #d3dade;
+  --accent: #d98a00;
+  --accent-soft: #fdf1dc;
+  --font-ui: "Rubik", "Heebo", "Arial Hebrew", Arial, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171b; --panel: #1b2228; --fg: #e8edf0; --muted: #93a0a8; --line: #2c363d;
+  --accent: #ffb020; --accent-soft: #33280f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12171b; --panel: #1b2228; --fg: #e8edf0; --muted: #93a0a8; --line: #2c363d;
+  --accent: #ffb020; --accent-soft: #33280f; color-scheme: dark }
+
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
+h1 { font-size: 1.6rem; margin: 0; font-weight: 700; text-wrap: balance; }
+.sub { margin: 4px 0 0; color: var(--muted); line-height: 1.5; }
+
+.strips { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.strip { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; transition: border-color .2s, background .2s; }
+.strip.lead { border-color: var(--accent); background: var(--accent-soft); }
+.strip label { font-size: .8rem; color: var(--muted); letter-spacing: .03em; }
+.strip .name { font-weight: 700; }
+.field { display: flex; align-items: baseline; gap: 6px; }
+input[type="number"] {
+  width: 100%; min-width: 0; font-family: var(--font-num); font-size: 1.5rem; font-weight: 600;
+  background: transparent; color: var(--fg); border: none; border-bottom: 2px solid var(--line);
+  padding: 4px 0; direction: ltr; text-align: left; font-variant-numeric: tabular-nums;
+}
+input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); }
+.unit { color: var(--muted); font-size: .9rem; }
+.tag { font-size: .75rem; font-weight: 500; color: var(--accent); min-height: 1em; }
+
+.readout { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
+.big { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.big .val { font-family: var(--font-num); font-size: clamp(2.6rem, 12vw, 3.6rem); font-weight: 600; color: var(--accent); direction: ltr; font-variant-numeric: tabular-nums; line-height: 1; }
+.big .u { font-size: 1.2rem; color: var(--muted); }
+.what { font-size: 1.05rem; line-height: 1.5; margin: 0; }
+.what strong { color: var(--accent); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.stat { display: grid; gap: 2px; }
+.stat span { font-size: .75rem; color: var(--muted); }
+.stat b { font-family: var(--font-num); font-weight: 500; direction: ltr; text-align: right; font-variant-numeric: tabular-nums; }
+
+.temp { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.temp label { color: var(--muted); font-size: .9rem; }
+.temp input[type="range"] { flex: 1; min-width: 140px; accent-color: var(--accent); }
+.temp output { font-family: var(--font-num); min-width: 4ch; direction: ltr; }
+
+.note { font-size: .85rem; color: var(--muted); line-height: 1.6; margin: 0; }
+@media (max-width: 380px) { .stats { grid-template-columns: 1fr 1fr; } }
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>מחשבון דיליי רמקולים</h1>
+    <p class="sub">הכנס את המרחק מנקודת ההאזנה (נקודה א') לכל רמקול. הרמקול הקרוב יותר מקדים, ולו צריך לתת דיליי.</p>
+  </header>
+
+  <div class="strips">
+    <div class="strip" id="s1">
+      <span class="name">רמקול 1</span>
+      <label for="d1">מרחק מנקודה א'</label>
+      <div class="field"><input id="d1" type="number" inputmode="decimal" min="0" step="0.1" value="12"><span class="unit">מ'</span></div>
+      <span class="tag" id="t1"></span>
+    </div>
+    <div class="strip" id="s2">
+      <span class="name">רמקול 2</span>
+      <label for="d2">מרחק מנקודה א'</label>
+      <div class="field"><input id="d2" type="number" inputmode="decimal" min="0" step="0.1" value="20"><span class="unit">מ'</span></div>
+      <span class="tag" id="t2"></span>
+    </div>
+  </div>
+
+  <section class="readout" aria-live="polite">
+    <div class="big"><span class="val" id="ms">0.00</span><span class="u">ms</span></div>
+    <p class="what" id="what"></p>
+    <div class="stats">
+      <div class="stat"><span>הפרש מרחק</span><b id="diff">–</b></div>
+      <div class="stat"><span>מהירות קול</span><b id="c">–</b></div>
+      <div class="stat"><span>דגימות ב‑48kHz</span><b id="smp">–</b></div>
+    </div>
+    <div class="temp">
+      <label for="temp">טמפרטורת אוויר</label>
+      <input id="temp" type="range" min="0" max="40" step="1" value="20">
+      <output id="tout">20°C</output>
+    </div>
+  </section>
+
+  <p class="note">החישוב: הפרש המרחקים חלקי מהירות הקול. מהירות הקול לפי הנוסחה 331.3 + 0.606 × טמפרטורה (מ'/ש'), כך שב‑20°C היא כ‑343 מ'/ש'. זו נקודת התחלה ליישור בזמן; בשטח מכוונים סופית לפי האוזן או מדידה.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const d1 = parseFloat($('d1').value), d2 = parseFloat($('d2').value), T = parseFloat($('temp').value);
+  const c = 331.3 + 0.606 * T;
+  $('tout').textContent = T + '°C';
+  $('c').textContent = c.toFixed(1) + ' m/s';
+  $('s1').classList.remove('lead'); $('s2').classList.remove('lead');
+  $('t1').textContent = ''; $('t2').textContent = '';
+  if (!(d1 >= 0) || !(d2 >= 0)) {
+    $('ms').textContent = '–'; $('diff').textContent = '–'; $('smp').textContent = '–';
+    $('what').textContent = 'הכנס שני מרחקים (מספר 0 ומעלה).';
+    return;
+  }
+  const diff = Math.abs(d1 - d2), ms = diff / c * 1000;
+  $('ms').textContent = ms.toFixed(2);
+  $('diff').textContent = diff.toFixed(2) + ' m';
+  $('smp').textContent = Math.round(ms * 48).toString();
+  if (diff === 0) { $('what').textContent = 'המרחקים שווים — אין צורך בדיליי.'; return; }
+  const lead = d1 < d2 ? 1 : 2, other = lead === 1 ? 2 : 1;
+  $('s' + lead).classList.add('lead');
+  $('t' + lead).textContent = '← מקדים, לתת דיליי';
+  $('what').innerHTML = 'תן דיליי של <strong>' + ms.toFixed(2) + ' ms</strong> לרמקול ' + lead + ', כדי שהצליל שלו יגיע לנקודה א\' יחד עם רמקול ' + other + '.';
+}
+['d1','d2','temp'].forEach(id => $(id).addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
