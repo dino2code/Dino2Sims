@@ -16,15 +16,21 @@
   --line: #d3dade;
   --accent: #d98a00;
   --accent-soft: #fdf1dc;
+  --on-accent: #1a1200;
+  --spk1: #1f8f86;
+  --spk2: #7a5cc7;
+  --stage: #e4e9ec;
+  --stage-grid: #c3ccd2;
+  --stage-label: rgba(255,255,255,.82);
   --font-ui: "Rubik", "Heebo", "Arial Hebrew", Arial, sans-serif;
   --font-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #12171b; --panel: #1b2228; --fg: #e8edf0; --muted: #93a0a8; --line: #2c363d;
-  --accent: #ffb020; --accent-soft: #33280f; color-scheme: dark } }
+  --accent: #ffb020; --accent-soft: #33280f; --on-accent: #1a1200; --spk1: #3cc4b8; --spk2: #a68cf0; --stage: #0e1316; --stage-grid: #2a343b; --stage-label: rgba(14,19,22,.8); color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #12171b; --panel: #1b2228; --fg: #e8edf0; --muted: #93a0a8; --line: #2c363d;
-  --accent: #ffb020; --accent-soft: #33280f; color-scheme: dark }
+  --accent: #ffb020; --accent-soft: #33280f; --on-accent: #1a1200; --spk1: #3cc4b8; --spk2: #a68cf0; --stage: #0e1316; --stage-grid: #2a343b; --stage-label: rgba(14,19,22,.8); color-scheme: dark }
 
 body {
   background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 16px;
@@ -51,6 +57,9 @@ input[type="number"] {
 }
 input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); }
 .unit { color: var(--muted); font-size: .9rem; }
+.strip.full { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 8px 14px; }
+.strip.full .field { max-width: 9rem; }
+.field.small input[type="number"] { font-size: 1.1rem; }
 .tag { font-size: .75rem; font-weight: 500; color: var(--accent); min-height: 1em; }
 
 .readout { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
@@ -70,9 +79,29 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 .temp output { font-family: var(--font-num); min-width: 4ch; direction: ltr; }
 
 .note { font-size: .85rem; color: var(--muted); line-height: 1.6; margin: 0; }
+.sim { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
+.sim h2 { font-size: 1.1rem; margin: 0; }
+.sim .hint { margin: 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
+.stage { position: relative; border-radius: 8px; overflow: hidden; background: var(--stage); touch-action: none; cursor: grab; }
+.stage canvas { display: block; width: 100%; }
+.lbl { position: absolute; top: 0; left: 0; transform: translate(-50%, -130%); font-size: .78rem; font-weight: 500; white-space: nowrap; pointer-events: none; padding: 1px 6px; border-radius: 4px; background: var(--stage-label); color: var(--fg); }
+.lbl.dist { font-family: var(--font-num); font-size: .72rem; transform: translate(-50%, -50%); color: var(--muted); }
+.clock { position: absolute; top: 8px; left: 8px; font-family: var(--font-num); font-size: .8rem; color: var(--muted); direction: ltr; background: var(--stage-label); padding: 2px 8px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button, .btn { font: inherit; font-size: .9rem; background: transparent; color: var(--fg); border: none; padding: 8px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 500; }
+.btn { border: 1px solid var(--line); border-radius: 8px; }
+.seg button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.status { margin: 0; line-height: 1.5; }
+.status strong { color: var(--accent); }
+.dot { display: inline-block; width: .7em; height: .7em; border-radius: 50%; margin-inline-start: 6px; vertical-align: middle; }
+.dot.c1 { background: var(--spk1); } .dot.c2 { background: var(--spk2); }
+.nogl { padding: 24px; color: var(--muted); text-align: center; }
 @media (max-width: 380px) { .stats { grid-template-columns: 1fr 1fr; } }
 </style>
 <style>body{margin:0}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
@@ -85,16 +114,25 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 
   <div class="strips">
     <div class="strip" id="s1">
-      <span class="name">רמקול 1</span>
-      <label for="d1">מרחק מנקודה א'</label>
+      <span class="name">רמקול 1<span class="dot c1" aria-hidden="true"></span></span>
+      <label for="d1">מרחק ישיר מנקודה א'</label>
       <div class="field"><input id="d1" type="number" inputmode="decimal" min="0" step="0.1" value="12"><span class="unit">מ'</span></div>
+      <label for="h1">גובה הרמקול</label>
+      <div class="field small"><input id="h1" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
       <span class="tag" id="t1"></span>
     </div>
     <div class="strip" id="s2">
-      <span class="name">רמקול 2</span>
-      <label for="d2">מרחק מנקודה א'</label>
+      <span class="name">רמקול 2<span class="dot c2" aria-hidden="true"></span></span>
+      <label for="d2">מרחק ישיר מנקודה א'</label>
       <div class="field"><input id="d2" type="number" inputmode="decimal" min="0" step="0.1" value="20"><span class="unit">מ'</span></div>
+      <label for="h2">גובה הרמקול</label>
+      <div class="field small"><input id="h2" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
       <span class="tag" id="t2"></span>
+    </div>
+    <div class="strip full" id="sa">
+      <span class="name">נקודה א'</span>
+      <label for="ha">גובה האוזן</label>
+      <div class="field small"><input id="ha" type="number" inputmode="decimal" min="0" step="0.1" value="1.6"><span class="unit">מ'</span></div>
     </div>
   </div>
 
@@ -113,35 +151,357 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
     </div>
   </section>
 
-  <p class="note">החישוב: הפרש המרחקים חלקי מהירות הקול. מהירות הקול לפי הנוסחה 331.3 + 0.606 × טמפרטורה (מ'/ש'), כך שב‑20°C היא כ‑343 מ'/ש'. זו נקודת התחלה ליישור בזמן; בשטח מכוונים סופית לפי האוזן או מדידה.</p>
+  <section class="sim" aria-labelledby="simh">
+    <h2 id="simh">הדמיה: איך הצליל מגיע לנקודה א'</h2>
+    <p class="hint">כל רמקול שולח גל קול. ההדמיה מואטת מאוד כדי שאפשר יהיה לראות מי מגיע ראשון. גרור את נקודה א' או אחד הרמקולים כדי להזיז אותם, והמרחקים יתעדכנו. גרירה במקום ריק מסובבת את התצוגה.</p>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="מצב דיליי">
+        <button type="button" id="mOff" aria-pressed="true">בלי דיליי</button>
+        <button type="button" id="mOn" aria-pressed="false">עם דיליי</button>
+      </div>
+      <button type="button" class="btn" id="play">עצור</button>
+    </div>
+    <div class="stage" id="stage">
+      <div class="clock" id="clock">t = 0.0 ms</div>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <p class="note">החישוב: הפרש המרחקים חלקי מהירות הקול. המרחק הוא הקו הישר מהרמקול לאוזן, כולל הפרש הגבהים. מהירות הקול לפי הנוסחה 331.3 + 0.606 × טמפרטורה (מ'/ש'), כך שב‑20°C היא כ‑343 מ'/ש'. זו נקודת התחלה ליישור בזמן; בשטח מכוונים סופית לפי האוזן או מדידה.</p>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+const state = { d1: 12, d2: 20, h1: 3, h2: 3, ha: 1.6, c: 343, ok: true };
+const num = id => parseFloat($(id).value);
 function calc() {
-  const d1 = parseFloat($('d1').value), d2 = parseFloat($('d2').value), T = parseFloat($('temp').value);
+  let d1 = num('d1'), d2 = num('d2');
+  const h1 = num('h1'), h2 = num('h2'), ha = num('ha'), T = num('temp');
   const c = 331.3 + 0.606 * T;
+  const ok = d1 >= 0 && d2 >= 0 && h1 >= 0 && h2 >= 0 && ha >= 0;
+  if (ok) {
+    // The direct distance can never be shorter than the height difference.
+    d1 = Math.max(d1, Math.abs(h1 - ha)); d2 = Math.max(d2, Math.abs(h2 - ha));
+  }
+  Object.assign(state, { d1, d2, h1, h2, ha, c, ok });
+  if (window.simUpdate) window.simUpdate();
   $('tout').textContent = T + '°C';
   $('c').textContent = c.toFixed(1) + ' m/s';
   $('s1').classList.remove('lead'); $('s2').classList.remove('lead');
   $('t1').textContent = ''; $('t2').textContent = '';
-  if (!(d1 >= 0) || !(d2 >= 0)) {
+  if (!ok) {
     $('ms').textContent = '–'; $('diff').textContent = '–'; $('smp').textContent = '–';
-    $('what').textContent = 'הכנס שני מרחקים (מספר 0 ומעלה).';
+    $('what').textContent = 'הכנס מרחקים וגבהים (מספר 0 ומעלה).';
     return;
   }
   const diff = Math.abs(d1 - d2), ms = diff / c * 1000;
   $('ms').textContent = ms.toFixed(2);
   $('diff').textContent = diff.toFixed(2) + ' m';
   $('smp').textContent = Math.round(ms * 48).toString();
-  if (diff === 0) { $('what').textContent = 'המרחקים שווים — אין צורך בדיליי.'; return; }
+  if (diff < 0.005) { $('what').textContent = 'המרחקים שווים — אין צורך בדיליי.'; return; }
   const lead = d1 < d2 ? 1 : 2, other = lead === 1 ? 2 : 1;
   $('s' + lead).classList.add('lead');
   $('t' + lead).textContent = '← מקדים, לתת דיליי';
   $('what').innerHTML = 'תן דיליי של <strong>' + ms.toFixed(2) + ' ms</strong> לרמקול ' + lead + ', כדי שהצליל שלו יגיע לנקודה א\' יחד עם רמקול ' + other + '.';
 }
 ['d1','d2','temp'].forEach(id => $(id).addEventListener('input', calc));
+// Changing a height keeps everyone where they stand on the floor, so the direct distances change.
+['h1','h2','ha'].forEach(id => $(id).addEventListener('input', () => window.simHeights ? window.simHeights() : calc()));
+// When a typed distance is shorter than the height difference, show the shortest possible one.
+['d1','d2','h1','h2','ha'].forEach(id => $(id).addEventListener('change', () => {
+  if (!state.ok) return;
+  if (num('d1') < state.d1 - 0.05) $('d1').value = state.d1.toFixed(1);
+  if (num('d2') < state.d2 - 0.05) $('d2').value = state.d2.toFixed(1);
+}));
 calc();
+</script>
+<script>
+(function () {
+  const stage = $('stage');
+  if (!window.THREE || !(function () { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })()) {
+    stage.innerHTML = '<p class="nogl">ההדמיה התלת־ממדית לא נתמכת בדפדפן הזה. המחשבון עצמו עובד כרגיל.</p>';
+    return;
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const H = i => i === 'a' ? state.ha : i ? state.h2 : state.h1; // heights
+  const RUN = 2.8, HOLD = 1.2; // seconds of animation, seconds of pause at the end
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  stage.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 0.9));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.6); sun.position.set(5, 10, 8); scene.add(sun);
+
+  function label(text, cls) { const d = document.createElement('div'); d.className = 'lbl' + (cls ? ' ' + cls : ''); d.textContent = text; stage.appendChild(d); return d; }
+  const lA = label("נקודה א'"), lS1 = label('רמקול 1'), lS2 = label('רמקול 2'), lD1 = label('', 'dist'), lD2 = label('', 'dist');
+
+  // Positions on the floor (x, z). Speakers face straight ahead (+z), toward the audience.
+  const P = { a: new THREE.Vector2(0, 0), s: [new THREE.Vector2(-4, -11.31), new THREE.Vector2(5, -19.36)] };
+
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hitGeo = new THREE.SphereGeometry(1, 12, 8);
+
+  const listener = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshStandardMaterial({ roughness: .5 }));
+  const listenerPole = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ roughness: .8 }));
+  const listenerHit = new THREE.Mesh(hitGeo, hitMat); listenerHit.userData.who = 'a';
+  scene.add(listener, listenerPole, listenerHit);
+
+  function makeSpeaker(i) {
+    const g = new THREE.Group();
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1, 1.4, .8), new THREE.MeshStandardMaterial({ roughness: .6 }));
+    const cone = new THREE.Mesh(new THREE.CircleGeometry(.32, 24), new THREE.MeshBasicMaterial());
+    cone.position.set(0, -.15, .41);
+    g.add(cab, cone);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ roughness: .8 }));
+    const hit = new THREE.Mesh(hitGeo, hitMat); hit.userData.who = i;
+    const wave = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshBasicMaterial({ transparent: true, opacity: .14, depthWrite: false }));
+    const ringPts = []; for (let j = 0; j <= 128; j++) { const a = j / 128 * Math.PI * 2; ringPts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); }
+    const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), new THREE.LineBasicMaterial({ transparent: true }));
+    const path = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ transparent: true, opacity: .55 }));
+    scene.add(g, pole, hit, wave, ring, path);
+    return { g, cab, cone, pole, hit, wave, ring, path };
+  }
+  const S = [makeSpeaker(0), makeSpeaker(1)];
+  const hits = [listenerHit, S[0].hit, S[1].hit];
+  let grid = null, accentCol = new THREE.Color('#ffb020');
+
+  function applyColors() {
+    const stageCol = new THREE.Color(css('--stage'));
+    renderer.setClearColor(stageCol);
+    const fg = new THREE.Color(css('--fg')), muted = new THREE.Color(css('--muted'));
+    [css('--spk1'), css('--spk2')].forEach((hex, i) => {
+      const s = S[i], c = new THREE.Color(hex); s.color = c;
+      s.cab.material.color.copy(fg).lerp(stageCol, .25);
+      s.cone.material.color.copy(c);
+      s.pole.material.color.copy(muted);
+      s.wave.material.color.copy(c); s.ring.material.color.copy(c); s.path.material.color.copy(c);
+    });
+    listener.userData.base = fg.clone(); listener.material.color.copy(fg);
+    listenerPole.material.color.copy(muted);
+    lS1.style.color = css('--spk1'); lS2.style.color = css('--spk2');
+    accentCol = new THREE.Color(css('--accent'));
+    buildGrid();
+  }
+
+  let R = 20, K = 1, mode = 'off', playing = true, t0 = performance.now(), az = 0.45, dragging = null, lock = false;
+  const target = new THREE.Vector3();
+  const pos = [new THREE.Vector3(), new THREE.Vector3()];
+  let sim = null;
+
+  function niceStep(span) { const raw = span / 12; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+  function buildGrid() {
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    const span = R * 3, step = niceStep(span), n = Math.ceil(span / step);
+    const col = new THREE.Color(css('--stage-grid'));
+    grid = new THREE.GridHelper(n * step, n, col, col);
+    grid.position.set(target.x, 0, target.z);
+    scene.add(grid);
+  }
+
+  // Scene scale and camera framing. Kept fixed while dragging so the view does not jump.
+  function frameScene() {
+    const pts = [P.a, P.s[0], P.s[1]];
+    const cx = (pts[0].x + pts[1].x + pts[2].x) / 3, cz = (pts[0].y + pts[1].y + pts[2].y) / 3;
+    R = Math.max(3, ...pts.map(p => Math.hypot(p.x - cx, p.y - cz)) ) * 1.15;
+    K = Math.max(1, R / 10);
+    target.set(cx, (state.ha + state.h1 + state.h2) / 3 * .6, cz);
+    buildGrid();
+  }
+
+  function layout() {
+    const k = K;
+    S.forEach((s, i) => {
+      pos[i].set(P.s[i].x, H(i), P.s[i].y);
+      s.g.position.copy(pos[i]); s.g.scale.setScalar(k * .8); s.g.rotation.set(0, 0, 0);
+      const top = H(i) - .7 * k * .8;
+      s.pole.scale.set(.05 * k, Math.max(top, .01), .05 * k); s.pole.position.set(pos[i].x, Math.max(top, .01) / 2, pos[i].z);
+      s.hit.position.copy(pos[i]); s.hit.scale.setScalar(1.3 * k);
+      s.path.geometry.setFromPoints([pos[i].clone(), new THREE.Vector3(P.a.x, state.ha, P.a.y)]);
+      s.ring.position.set(pos[i].x, state.ha, pos[i].z); s.wave.position.copy(pos[i]);
+    });
+    listener.position.set(P.a.x, state.ha, P.a.y);
+    listenerPole.scale.set(.04 * k, Math.max(state.ha, .01), .04 * k); listenerPole.position.set(P.a.x, Math.max(state.ha, .01) / 2, P.a.y);
+    listenerHit.position.copy(listener.position); listenerHit.scale.setScalar(1.3 * k);
+    lD1.textContent = state.d1.toFixed(1) + " מ'"; lD2.textContent = state.d2.toFixed(1) + " מ'";
+  }
+
+  function compute() {
+    const c = state.c, d = [state.d1, state.d2];
+    const diffMs = Math.abs(d[0] - d[1]) / c * 1000;
+    const lead = d[0] < d[1] ? 0 : d[1] < d[0] ? 1 : -1;
+    const emit = [0, 0];
+    if (mode === 'on' && lead >= 0) emit[lead] = diffMs;
+    const arrive = d.map((x, i) => emit[i] + x / c * 1000);
+    const tEnd = Math.max(arrive[0], arrive[1]) * 1.18 || 1;
+    sim = { emit, arrive, tEnd, lead, diffMs };
+    const st = $('status');
+    if (!state.ok) { st.textContent = 'הכנס שני מרחקים כדי לראות את ההדמיה.'; return; }
+    const a1 = arrive[0].toFixed(1);
+    if (lead < 0) st.innerHTML = 'המרחקים שווים, ולכן שני הגלים מגיעים יחד ב‑<strong>' + a1 + ' ms</strong> גם בלי דיליי.';
+    else if (mode === 'off') st.innerHTML = 'בלי דיליי: רמקול ' + (lead + 1) + ' מגיע ב‑' + arrive[lead].toFixed(1) + ' ms, ורמקול ' + (2 - lead) + ' רק ב‑' + arrive[1 - lead].toFixed(1) + ' ms. הפער הוא <strong>' + diffMs.toFixed(2) + ' ms</strong>, ושומעים שני צלילים נפרדים או צבע מוזר.';
+    else st.innerHTML = 'עם דיליי של ' + diffMs.toFixed(2) + ' ms לרמקול ' + (lead + 1) + ': שני הגלים מגיעים לנקודה א\' <strong>יחד</strong>, ב‑' + a1 + ' ms.';
+  }
+
+  // Called by calc() whenever an input changes. Typed distances move the speaker along its current line to point A.
+  window.simUpdate = function () {
+    if (!state.ok) { compute(); return; }
+    if (!dragging && !lock) {
+      let moved = false;
+      [state.d1, state.d2].forEach((d, i) => {
+        const dh = H(i) - state.ha, want = Math.sqrt(Math.max(d * d - dh * dh, 0));
+        const v = P.s[i].clone().sub(P.a), cur = v.length();
+        if (Math.abs(Math.hypot(cur, dh) - d) > 0.06) {
+          if (cur < 1e-6) v.set(i ? .3 : -.3, -1);
+          v.setLength(Math.max(want, 0.001)); P.s[i].copy(P.a).add(v); moved = true;
+        }
+      });
+      if (moved) frameScene();
+    }
+    layout(); compute(); t0 = performance.now();
+  };
+
+  // Direct distance from a speaker to the ear, from the floor positions and heights.
+  const dist3 = i => Math.hypot(P.s[i].distanceTo(P.a), H(i) - state.ha);
+  function writeDistances() { $('d1').value = dist3(0).toFixed(1); $('d2').value = dist3(1).toFixed(1); }
+  window.simHeights = function () {
+    const h = ['h1', 'h2', 'ha'].map(num);
+    if (!(h[0] >= 0 && h[1] >= 0 && h[2] >= 0)) { calc(); return; }
+    Object.assign(state, { h1: h[0], h2: h[1], ha: h[2] });
+    writeDistances(); lock = true; calc(); lock = false; frameScene(); layout();
+  };
+
+  function setMode(m) {
+    mode = m;
+    $('mOff').setAttribute('aria-pressed', m === 'off'); $('mOn').setAttribute('aria-pressed', m === 'on');
+    compute(); t0 = performance.now();
+  }
+  $('mOff').addEventListener('click', () => setMode('off'));
+  $('mOn').addEventListener('click', () => setMode('on'));
+  let pausedAt = 0;
+  $('play').addEventListener('click', () => {
+    playing = !playing;
+    if (!playing) pausedAt = performance.now(); else t0 += performance.now() - pausedAt;
+    $('play').textContent = playing ? 'עצור' : 'הפעל';
+  });
+
+  // Pointer: drag an object to move it on the floor, drag empty space to rotate the view.
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitPt = new THREE.Vector3();
+  function pick(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+  }
+  let rot = null;
+  const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', e => {
+    pick(e);
+    const h = ray.intersectObjects(hits)[0];
+    cv.setPointerCapture(e.pointerId);
+    if (h) {
+      dragging = { who: h.object.userData.who };
+      plane.constant = -H(dragging.who);
+      if (ray.ray.intersectPlane(plane, hitPt)) {
+        const p = dragging.who === 'a' ? P.a : P.s[dragging.who];
+        dragging.off = new THREE.Vector2(p.x - hitPt.x, p.y - hitPt.z);
+      }
+      stage.style.cursor = 'grabbing';
+    } else { rot = { x: e.clientX, az }; stage.style.cursor = 'grabbing'; }
+  });
+  cv.addEventListener('pointermove', e => {
+    if (dragging) {
+      pick(e);
+      if (!ray.ray.intersectPlane(plane, hitPt) || !dragging.off) return;
+      const p = dragging.who === 'a' ? P.a : P.s[dragging.who];
+      p.set(hitPt.x + dragging.off.x, hitPt.z + dragging.off.y);
+      writeDistances();
+      calc();
+    } else if (rot) {
+      az = rot.az - (e.clientX - rot.x) * .008;
+    } else {
+      pick(e); stage.style.cursor = ray.intersectObjects(hits).length ? 'move' : '';
+    }
+  });
+  function endDrag() {
+    if (dragging) {
+      dragging = null;
+      // Snap positions to the rounded distances shown in the inputs, then refit the view.
+      writeDistances(); lock = true; calc(); lock = false; frameScene(); layout();
+    }
+    rot = null; stage.style.cursor = '';
+  }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+
+  function resize() {
+    const w = stage.clientWidth, h = Math.round(Math.min(Math.max(w * .8, 280), 440));
+    renderer.setSize(w, h, true); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  const tmp = new THREE.Vector3();
+  function place(el, v) {
+    tmp.copy(v).project(camera);
+    const w = stage.clientWidth, h = renderer.domElement.clientHeight;
+    el.style.left = ((tmp.x + 1) / 2 * w) + 'px'; el.style.top = ((1 - tmp.y) / 2 * h) + 'px';
+    el.style.visibility = tmp.z < 1 ? 'visible' : 'hidden';
+  }
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!sim) return;
+    const dist = R * 2.3;
+    camera.position.set(target.x + Math.sin(az) * dist, target.y + dist * .75, target.z + Math.cos(az) * dist);
+    camera.lookAt(target);
+
+    const el = ((playing ? now : pausedAt) - t0) / 1000;
+    const cyc = el % (RUN + HOLD);
+    const tMs = Math.min(cyc / RUN, 1) * sim.tEnd;
+    $('clock').textContent = 't = ' + tMs.toFixed(1) + ' ms';
+
+    const flash = [0, 0];
+    S.forEach((s, i) => {
+      const r = (tMs - sim.emit[i]) * state.c / 1000;
+      const d = i ? state.d2 : state.d1;
+      const vis = state.ok && r > 0;
+      s.wave.visible = s.ring.visible = vis;
+      if (vis) {
+        s.wave.scale.setScalar(r);
+        // The ring is where the wave crosses the ear-height plane.
+        const dh = H(i) - state.ha, rr = r * r - dh * dh;
+        s.ring.visible = rr > 0; if (rr > 0) s.ring.scale.setScalar(Math.sqrt(rr));
+        const fade = Math.max(0, 1 - Math.max(0, r - d) / (R * .6));
+        s.wave.material.opacity = .13 * fade; s.ring.material.opacity = .9 * fade;
+      }
+      s.cone.scale.setScalar(tMs >= sim.emit[i] && tMs - sim.emit[i] < sim.tEnd * .06 ? 1.35 : 1);
+      const since = tMs - sim.arrive[i];
+      if (since >= 0 && since < sim.tEnd * .12) flash[i] = 1;
+    });
+    const both = Math.abs(sim.arrive[0] - sim.arrive[1]) < sim.tEnd * .01;
+    const base = listener.userData.base || new THREE.Color('#888');
+    if (flash[0] && flash[1] && both) listener.material.color.copy(accentCol);
+    else if (flash[0]) listener.material.color.copy(S[0].color);
+    else if (flash[1]) listener.material.color.copy(S[1].color);
+    else listener.material.color.copy(base);
+    const k = K;
+    listener.scale.setScalar(.28 * k * (flash[0] || flash[1] ? (both && flash[0] && flash[1] ? 1.8 : 1.4) : 1));
+
+    renderer.render(scene, camera);
+    const A3 = new THREE.Vector3(P.a.x, state.ha, P.a.y);
+    place(lA, A3.clone().add(new THREE.Vector3(0, .5 * k, 0)));
+    place(lS1, pos[0].clone().add(new THREE.Vector3(0, .9 * k, 0)));
+    place(lS2, pos[1].clone().add(new THREE.Vector3(0, .9 * k, 0)));
+    place(lD1, pos[0].clone().add(A3).multiplyScalar(.5));
+    place(lD2, pos[1].clone().add(A3).multiplyScalar(.5));
+  }
+
+  resize(); applyColors(); window.simUpdate(); frameScene(); layout();
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', applyColors);
+  new MutationObserver(applyColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
