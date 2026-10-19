@@ -360,8 +360,11 @@ calc();
     const ringPts = []; for (let j = 0; j <= 128; j++) { const a = j / 128 * Math.PI * 2; ringPts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); }
     const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), new THREE.LineBasicMaterial({ transparent: true }));
     const path = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ transparent: true, opacity: .55 }));
-    scene.add(g, pole, rig, hit, wave, ring, path);
-    return { g, ps, la, laBoxes: [], laTop: 0, laN: 0, pole, rig, hit, wave, ring, path, flown: false };
+    // Line array: a cylindrical wavefront around the vertical axis of the hang.
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 64, 1, true), new THREE.MeshBasicMaterial({ transparent: true, opacity: .14, depthWrite: false, side: THREE.DoubleSide }));
+    const cylEdge = [0, 1].map(() => new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), new THREE.LineBasicMaterial({ transparent: true })));
+    scene.add(g, pole, rig, hit, wave, ring, path, cyl, ...cylEdge);
+    return { g, ps, la, laBoxes: [], laTop: 0, laBot: 0, laN: 0, pole, rig, hit, wave, ring, path, cyl, cylEdge, flown: false };
   }
   const S = [makeSpeaker(0), makeSpeaker(1)];
   // Build a J-shaped hang of n elements: each one tilts a little more downward than the one above.
@@ -379,7 +382,7 @@ calc();
     }
     const mid = centers.reduce((t, v) => t + v, 0) / n; // acoustic centre = middle of the hang
     s.laBoxes.forEach(b => { b.g.position.y -= mid; });
-    s.laTop = -mid; s.laN = n;
+    s.laTop = -mid; s.laBot = py - mid; s.laN = n;
     s.laBoxes.forEach(b => { b.cab.material.color.copy(s.cabCol || fgCol); b.grille.material.color.copy(s.color || fgCol); });
   }
   const hits = [listenerHit, S[0].hit, S[1].hit];
@@ -397,6 +400,7 @@ calc();
       [s.ps, ...s.laBoxes].forEach(b => { b.cab.material.color.copy(cabCol); b.grille.material.color.copy(c); });
       s.pole.material.color.copy(muted); s.rig.material.color.copy(muted);
       s.wave.material.color.copy(c); s.ring.material.color.copy(c); s.path.material.color.copy(c);
+      s.cyl.material.color.copy(c); s.cylEdge.forEach(e => e.material.color.copy(c));
     });
     Object.values(listener).forEach(m => m.material.color.copy(fg));
     lS1.style.color = css('--spk1'); lS2.style.color = css('--spk2');
@@ -607,8 +611,26 @@ calc();
       const r = (tMs - sim.emit[i]) * state.c / 1000;
       const d = i ? state.d2 : state.d1;
       const vis = state.ok && r > 0;
-      s.wave.visible = s.ring.visible = vis;
-      if (vis) {
+      const cylVis = vis && s.flown;
+      s.wave.visible = vis && !s.flown;
+      s.ring.visible = vis;
+      s.cyl.visible = cylVis; s.cylEdge.forEach(e => { e.visible = cylVis; });
+      if (cylVis) {
+        // Cylindrical wave: grows sideways only. Its radius is scaled so it reaches
+        // point A exactly at the calculated arrival time (distance from the acoustic centre).
+        const dh = H(i) - state.ha, horiz = Math.sqrt(Math.max(d * d - dh * dh, 0));
+        const rc = d > 0 ? r * horiz / d : r;
+        // Vertical span: from the top of the hang down to the ear plane (or the hang bottom if lower).
+        const yTop = H(i) + s.laTop, yBot = Math.min(H(i) + s.laBot, state.ha);
+        const hgt = Math.max(yTop - yBot, .05);
+        s.cyl.scale.set(rc, hgt, rc); s.cyl.position.set(pos[i].x, (yTop + yBot) / 2, pos[i].z);
+        s.cylEdge[0].scale.setScalar(rc); s.cylEdge[0].position.set(pos[i].x, yTop, pos[i].z);
+        s.cylEdge[1].scale.setScalar(rc); s.cylEdge[1].position.set(pos[i].x, yBot, pos[i].z);
+        s.ring.scale.setScalar(rc); s.ring.visible = rc > 0;
+        const fade = Math.max(0, 1 - Math.max(0, r - d) / (R * .6));
+        s.cyl.material.opacity = .16 * fade; s.ring.material.opacity = .9 * fade;
+        s.cylEdge.forEach(e => { e.material.opacity = .5 * fade; });
+      } else if (vis) {
         s.wave.scale.setScalar(r);
         // The ring is where the wave crosses the ear-height plane.
         const dh = H(i) - state.ha, rr = r * r - dh * dh;
