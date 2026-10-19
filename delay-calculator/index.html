@@ -89,6 +89,9 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
 .temp label { color: var(--muted); font-size: .9rem; }
 .temp input[type="range"] { flex: 1; min-width: 140px; accent-color: var(--accent); }
 .temp output { font-family: var(--font-num); min-width: 4ch; direction: ltr; }
+.humid .seg button { padding: 6px 12px; font-size: .85rem; }
+.temp input[type="range"]:disabled { opacity: .4; }
+.temp output.off { opacity: .4; }
 
 .note { font-size: .85rem; color: var(--muted); line-height: 1.6; margin: 0; }
 .sim { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
@@ -131,15 +134,6 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <div class="field"><input id="d1" type="number" inputmode="decimal" min="0" step="0.1" value="12"><span class="unit">מ'</span></div>
       <label for="h1">גובה המרכז האקוסטי של הרמקול</label>
       <div class="field small"><input id="h1" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
-      <span class="sublbl" id="kl1">סוג רמקול</span>
-      <div class="kind" role="group" aria-labelledby="kl1">
-        <button type="button" class="kbtn" data-spk="1" data-kind="ps" aria-pressed="true">Point Source</button>
-        <button type="button" class="kbtn" data-spk="1" data-kind="la" aria-pressed="false">Line Array</button>
-      </div>
-      <div class="lacount" id="lc1" hidden>
-        <label for="n1">מספר יחידות</label>
-        <div class="field small"><input id="n1" type="number" inputmode="numeric" min="1" max="24" step="1" value="8"></div>
-      </div>
       <span class="tag" id="t1"></span>
     </div>
     <div class="strip" id="s2">
@@ -148,15 +142,6 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <div class="field"><input id="d2" type="number" inputmode="decimal" min="0" step="0.1" value="20"><span class="unit">מ'</span></div>
       <label for="h2">גובה המרכז האקוסטי של הרמקול</label>
       <div class="field small"><input id="h2" type="number" inputmode="decimal" min="0" step="0.1" value="3"><span class="unit">מ'</span></div>
-      <span class="sublbl" id="kl2">סוג רמקול</span>
-      <div class="kind" role="group" aria-labelledby="kl2">
-        <button type="button" class="kbtn" data-spk="2" data-kind="ps" aria-pressed="true">Point Source</button>
-        <button type="button" class="kbtn" data-spk="2" data-kind="la" aria-pressed="false">Line Array</button>
-      </div>
-      <div class="lacount" id="lc2" hidden>
-        <label for="n2">מספר יחידות</label>
-        <div class="field small"><input id="n2" type="number" inputmode="numeric" min="1" max="24" step="1" value="8"></div>
-      </div>
       <span class="tag" id="t2"></span>
     </div>
     <div class="strip full" id="sa">
@@ -183,6 +168,15 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
       <input id="temp" type="range" min="0" max="40" step="1" value="20">
       <output id="tout">20°C</output>
     </div>
+    <div class="temp humid">
+      <label for="rh">לחות יחסית</label>
+      <div class="seg" role="group" aria-label="חישוב לחות">
+        <button type="button" id="hOff" aria-pressed="true">בלי לחות</button>
+        <button type="button" id="hOn" aria-pressed="false">עם לחות</button>
+      </div>
+      <input id="rh" type="range" min="0" max="100" step="5" value="50" disabled>
+      <output id="rhout" class="off">50%</output>
+    </div>
   </section>
 
   <section class="sim" aria-labelledby="simh">
@@ -201,18 +195,31 @@ input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); 
     <p class="status" id="status" aria-live="polite"></p>
   </section>
 
-  <p class="note">החישוב: הפרש המרחקים חלקי מהירות הקול. המרחק הוא הקו הישר מהרמקול לאוזן, כולל הפרש הגבהים. מהירות הקול לפי הנוסחה 331.3 + 0.606 × טמפרטורה (מ'/ש'), כך שב‑20°C היא כ‑343 מ'/ש'. זו נקודת התחלה ליישור בזמן; בשטח מכוונים סופית לפי האוזן או מדידה.</p>
+  <p class="note">החישוב: הפרש המרחקים חלקי מהירות הקול. המרחק הוא הקו הישר מהרמקול לאוזן, כולל הפרש הגבהים. מהירות הקול בלי לחות: 331.3 + 0.606 × טמפרטורה (מ'/ש'), כך שב‑20°C היא כ‑343 מ'/ש'. עם לחות: נוסחת Cramer (1993), שעליה מבוססת טבלה 2‑1 בספר של Boyce; אוויר לח מעט מהיר יותר (ב‑20°C, מ‑343.4 ביובש ל‑344.6 מ'/ש' ב‑100%). זו נקודת התחלה ליישור בזמן; בשטח מכוונים סופית לפי האוזן או מדידה.</p>
   <p class="note credit">יוצר: דין שגב</p>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const state = { d1: 12, d2: 20, h1: 3, h2: 3, ha: 1.6, c: 343, ok: true, kind: ['ps', 'ps'], count: [8, 8] };
+const state = { humid: false, d1: 12, d2: 20, h1: 3, h2: 3, ha: 1.6, c: 343, ok: true, kind: ['ps', 'ps'], count: [8, 8] };
 const num = id => parseFloat($(id).value);
+// Speed of sound in air with humidity: Cramer (1993), J. Acoust. Soc. Am. 93(5), the formula behind
+// Boyce's Table 2-1 (Introduction to Live Sound Reinforcement). Sea-level pressure, 314 ppm CO2.
+function soundSpeed(t, rh) {
+  const p = 101325, xc = 0.000314, T = t + 273.15;
+  const f = 1.00062 + 3.14e-8 * p + 5.6e-7 * t * t;
+  const psv = Math.exp(1.2811805e-5 * T * T - 1.9509874e-2 * T + 34.04926034 - 6.3536311e3 / T);
+  const xw = rh / 100 * f * psv / p;
+  return 331.5024 + 0.603055 * t - 0.000528 * t * t
+    + (51.471935 + 0.1495874 * t - 0.000782 * t * t) * xw
+    + (-1.82e-7 + 3.73e-8 * t - 2.93e-10 * t * t) * p
+    + (-85.20931 - 0.228525 * t + 5.91e-5 * t * t) * xc
+    - 2.835149 * xw * xw - 2.15e-13 * p * p + 29.179762 * xc * xc + 0.000486 * xw * p * xc;
+}
 function calc() {
   let d1 = num('d1'), d2 = num('d2');
   const h1 = num('h1'), h2 = num('h2'), ha = num('ha'), T = num('temp');
-  const c = 331.3 + 0.606 * T;
+  const c = state.humid ? soundSpeed(T, num('rh')) : 331.3 + 0.606 * T;
   const ok = d1 >= 0 && d2 >= 0 && h1 >= 0 && h2 >= 0 && ha >= 0;
   if (ok) {
     // The direct distance can never be shorter than the height difference.
@@ -221,6 +228,7 @@ function calc() {
   Object.assign(state, { d1, d2, h1, h2, ha, c, ok });
   if (window.simUpdate) window.simUpdate();
   $('tout').textContent = T + '°C';
+  $('rhout').textContent = num('rh') + '%';
   $('c').textContent = c.toFixed(1) + ' m/s';
   $('s1').classList.remove('lead'); $('s2').classList.remove('lead');
   $('t1').textContent = ''; $('t2').textContent = '';
@@ -239,7 +247,16 @@ function calc() {
   $('t' + lead).textContent = '← מקדים, לתת דיליי';
   $('what').innerHTML = 'תן דיליי של <strong>' + ms.toFixed(2) + ' ms</strong> לרמקול ' + lead + ', כדי שהצליל שלו יגיע לנקודה א\' יחד עם רמקול ' + other + '.';
 }
-['d1','d2','temp'].forEach(id => $(id).addEventListener('input', calc));
+['d1','d2','temp','rh'].forEach(id => $(id).addEventListener('input', calc));
+// Humidity on/off: off keeps the dry-air formula.
+function setHumid(on) {
+  state.humid = on;
+  $('hOff').setAttribute('aria-pressed', !on); $('hOn').setAttribute('aria-pressed', on);
+  $('rh').disabled = !on; $('rhout').classList.toggle('off', !on);
+  calc();
+}
+$('hOff').addEventListener('click', () => setHumid(false));
+$('hOn').addEventListener('click', () => setHumid(true));
 // Changing a height keeps everyone where they stand on the floor, so the direct distances change.
 ['h1','h2','ha'].forEach(id => $(id).addEventListener('input', () => window.simHeights ? window.simHeights() : calc()));
 // When a typed distance is shorter than the height difference, show the shortest possible one.
@@ -248,18 +265,7 @@ function calc() {
   if (num('d1') < state.d1 - 0.05) $('d1').value = state.d1.toFixed(1);
   if (num('d2') < state.d2 - 0.05) $('d2').value = state.d2.toFixed(1);
 }));
-// Speaker type (only changes the drawing, not the calculation).
-document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => {
-  const i = +b.dataset.spk - 1;
-  state.kind[i] = b.dataset.kind;
-  document.querySelectorAll('.kbtn[data-spk="' + b.dataset.spk + '"]').forEach(x => x.setAttribute('aria-pressed', x === b));
-  $('lc' + b.dataset.spk).hidden = b.dataset.kind !== 'la';
-  if (window.simUpdate) window.simUpdate();
-}));
-[1, 2].forEach(k => $('n' + k).addEventListener('input', () => {
-  const v = Math.round(num('n' + k));
-  if (v >= 1 && v <= 24) { state.count[k - 1] = v; if (window.simUpdate) window.simUpdate(); }
-}));
+// Speakers are point sources (spherical wave).
 // Fixed ear heights: standing 1.6 m, seated 1.2 m.
 function markPreset() {
   document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', Math.abs(num('ha') - parseFloat(b.dataset.ha)) < 0.001));
