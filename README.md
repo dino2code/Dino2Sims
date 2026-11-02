@@ -1,6 +1,6 @@
 # Dino2Sims
 
-סימולטורים אינטראקטיביים לקורס הגברה (Live Sound Engineering).
+Live Sound Engineering Simulations
 
 האתר: https://dino2code.github.io/Dino2Sims/
 
