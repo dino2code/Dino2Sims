@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>קומפרסור בתלת-ממד</title>
+<style>
+/* Layout: one dark stage — title, a live isometric scene, a hardware-style control strip, a caption. Single dark look by choice. */
+:root{
+  color-scheme:dark;
+  --bg:#12130e; --bg2:#1c1d14; --ink:#e8e8df; --muted:#8f907f; --line:#3a3b2e;
+  --in:#ff3d8b;   /* before the compressor / threshold */
+  --out:#2fe0ff;  /* after the compressor */
+  --gr:#ff9a2e;   /* gain reduction */
+  --display:"Space Mono", ui-monospace, Menlo, monospace;
+  --body:"Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body{margin:0;background:radial-gradient(120% 80% at 50% 30%,var(--bg2),var(--bg) 70%) fixed,var(--bg);color:var(--ink);font-family:var(--body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;display:grid;gap:14px}
+.wrap>*:not(canvas){width:100%;max-width:860px;margin-inline:auto;box-sizing:border-box;min-width:0}
+header{text-align:center;display:grid;gap:4px}
+h1{margin:0;font-size:clamp(22px,4.4vw,32px);font-weight:700;letter-spacing:.2px;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px}
+.big{font-family:var(--display);font-size:clamp(26px,6vw,40px);font-weight:700;color:var(--gr);font-variant-numeric:tabular-nums;direction:ltr}
+.big small{font-size:.45em;color:var(--muted);font-weight:400;margin-inline-start:6px}
+canvas{width:100%;height:auto;display:block;aspect-ratio:16/11;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:2px;vertical-align:middle;margin-inline-end:6px;box-shadow:0 0 6px currentColor}
+.rack{direction:ltr;background:linear-gradient(#202118,#17180f);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;box-shadow:inset 0 1px 0 #ffffff0d,0 10px 30px #0008}
+.knob{display:grid;gap:6px;justify-items:center;text-align:center;min-width:0}
+.knob label{font-family:var(--display);font-size:11px;letter-spacing:1px;font-weight:700}
+.knob output{font-family:var(--display);font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
+.knob input{width:100%}
+.k-th input{accent-color:#ff3d8b}.k-ra input{accent-color:#2fe0ff}.k-mk input{accent-color:#ff9a2e}.k-kn{color:#ff8fc0}.k-kn input{accent-color:#ff8fc0}.k-at input,.k-re input{accent-color:#c9c9bd}
+.k-th{color:var(--in)} .k-ra{color:var(--out)} .k-at,.k-re{color:#c9c9bd} .k-mk{color:var(--gr)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+button{font:600 13px var(--body);color:var(--ink);background:#25261b;border:1px solid var(--line);border-radius:8px;padding:9px 14px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--out);color:var(--out);box-shadow:0 0 10px #2fe0ff40}
+button.play[aria-pressed="true"]{border-color:var(--gr);color:var(--gr);box-shadow:0 0 10px #ff9a2e40}
+button:focus-visible,input:focus-visible{outline:2px solid var(--out);outline-offset:2px}
+.stats{direction:ltr;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;font-family:var(--display);font-size:12px;color:var(--muted);text-align:center}
+.stats b{display:block;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.cap{color:var(--ink);font-size:15px;text-align:center;line-height:1.6;max-width:65ch;margin:0 auto}
+.math{direction:ltr;font-family:var(--display);font-size:12px;color:var(--muted);text-align:center;line-height:1.8}
+.src{font-size:12px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);padding-top:12px}
+.src a{color:var(--ink)}
+.credit{text-align:center;font-size:13px;color:var(--muted);margin:0}.credit a{color:var(--out)}
+@media (max-width:560px){.rack{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap">
+
+</head>
+<body>
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>Ratio קובע כמה חזק לוחצים</h1>
+    <div class="sub">Gain Reduction על לולאת תופים · קומפרסור Feed-forward אמיתי</div>
+    <div class="big" id="grBig">0.0<small>dB GR</small></div>
+  </header>
+
+  <canvas id="scene" width="2200" height="1512" role="img" aria-label="סצנה איזומטרית: משמאל עקומת ההעברה של הקומפרסור, מימין שלושה מסלולי זמן — אות נכנס בוורוד עם מישור ה-Threshold, Gain Reduction בכתום, ואות יוצא בציאן."></canvas>
+
+  <div class="legend">
+    <span><i style="background:var(--in);color:var(--in)"></i>Input + Threshold</span>
+    <span><i style="background:var(--gr);color:var(--gr)"></i>Gain Reduction</span>
+    <span><i style="background:var(--out);color:var(--out)"></i>Output</span>
+  </div>
+
+  <div class="rack" aria-label="פאנל הקומפרסור">
+    <div class="knob k-th"><label for="th">THRESHOLD</label><input id="th" type="range" min="-40" max="0" step="1" value="-22"><output id="thv"></output></div>
+    <div class="knob k-ra"><label for="ra">RATIO</label><input id="ra" type="range" min="0" max="5" step="1" value="2"><output id="rav"></output></div>
+    <div class="knob k-at"><label for="at">ATTACK</label><input id="at" type="range" min="0" max="5" step="1" value="2"><output id="atv"></output></div>
+    <div class="knob k-re"><label for="re">RELEASE</label><input id="re" type="range" min="0" max="5" step="1" value="2"><output id="rev"></output></div>
+    <div class="knob k-kn"><label for="kn">KNEE</label><input id="kn" type="range" min="0" max="24" step="2" value="0"><output id="knv"></output></div>
+    <div class="knob k-mk"><label for="mk">MAKEUP</label><input id="mk" type="range" min="0" max="18" step="1" value="0"><output id="mkv"></output></div>
+  </div>
+
+  <div class="bar">
+    <button class="play" id="play" aria-pressed="false">▶ השמע</button>
+    <button id="ab" aria-pressed="true">שומעים: אחרי הקומפרסור</button>
+  </div>
+
+  <div class="stats">
+    <div>Input peak<b id="sIn">—</b></div>
+    <div>Output peak<b id="sOut">—</b></div>
+    <div>Max GR<b id="sGr">—</b></div>
+    <div>Crest out/in<b id="sCr">—</b></div>
+  </div>
+
+  <p class="cap" id="cap">מעל ה-Threshold, כל 4 dB שנכנסים יוצאים כ-1 dB. Attack ו-Release קובעים כמה מהר הלחיצה נכנסת ומשתחררת.</p>
+  <div class="math">x<sub>G</sub> = 20·log<sub>10</sub>|x| · y<sub>G</sub> = T + (x<sub>G</sub> − T)/R (מעל T + W/2; בתוך ה-Knee מעבר ריבועי חלק) · GR = x<sub>G</sub> − y<sub>G</sub> → smoothed by attack/release · out = in · 10<sup>(−GR + makeup)/20</sup><br>לולאת תופים מסונתזת 100 BPM · גלאי Peak · Knee ‏W dB (0 = hard) · הסינתזה והקומפרסור מחושבים בדף, והתמונה והשמע הם אותו חישוב</div>
+
+  <p class="credit"><a href="../">← כל ההדמיות ב-Dino2Sims</a> · יוצר: דין שגב</p>
+  <div class="src"><b>מקורות</b> · Boyce, <i>Introduction to Live Sound Reinforcement</i>, פרק 8: 8.6.3 Compression Ratio, 8.6.4 Attack and Release (טווחים 0.1–200 ms / 50 ms–3 s), 8.6.5 Level Detection, 8.6.6 Knee · Davis &amp; Jones, <i>Sound Reinforcement Handbook</i>, סעיף 14.3 (Fig. 14-26, הגדרות Attack/Release, Pumping) · המודל הדיגיטלי: Giannoulis, Massberg &amp; Reiss, “Digital Dynamic Range Compressor Design — A Tutorial and Analysis”, JAES 60(6), 2012 — <a href="https://www.aes.org/e-lib/browse.cfm?elib=16354" target="_blank" rel="noopener">AES E-Library</a></div>
+</div>
+
+<script>
+(() => {
+const FS = 44100, BPM = 100, BEAT = 60 / BPM, BARS = 1, DUR = BEAT * 4 * BARS, N = Math.round(DUR * FS);
+const RATIOS = [1.5, 2, 4, 8, 20, 1000], RATIO_TXT = ["1.5:1", "2:1", "4:1", "8:1", "20:1", "∞:1"];
+const ATK = [0.1, 1, 5, 15, 40, 100], REL = [30, 60, 120, 250, 500, 1000];
+const $ = (id) => document.getElementById(id);
+const P = { th: -22, ra: 4, at: 5, re: 120, mk: 0, kn: 0 };
+// gain computer with an optional soft knee of width W dB (Giannoulis et al. 2012, eq. 4)
+function gc(xG) {
+  const T = P.th, R = P.ra, W = P.kn, d = 2 * (xG - T);
+  if (d < -W) return xG;
+  if (W > 0 && Math.abs(d) <= W) return xG + (1 / R - 1) * Math.pow(xG - T + W / 2, 2) / (2 * W);
+  return T + (xG - T) / R;
+}
+
+// ---------- drum loop synthesis (deterministic) ----------
+let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff) * 2 - 1;
+const input = new Float32Array(N);
+function hit(t0, fn, len) { const s0 = Math.round(t0 * FS), L = Math.round(len * FS); for (let i = 0; i < L && s0 + i < N; i++) input[s0 + i] += fn(i / FS); }
+const kick = (g) => (t) => { const f = 48 + 110 * Math.exp(-t * 28); return g * Math.sin(2 * Math.PI * (48 * t + (110 / 28) * (1 - Math.exp(-t * 28)))) * Math.exp(-t * 7) ; };
+let lp = 0; const snare = (g) => (t) => g * (0.55 * Math.sin(2 * Math.PI * 185 * t) * Math.exp(-t * 22) + 0.6 * rnd() * Math.exp(-t * 16));
+let hpPrev = 0, hpOut = 0; const hat = (g) => (t) => { const n = rnd(); hpOut = 0.6 * (hpOut + n - hpPrev); hpPrev = n; return g * hpOut * Math.exp(-t * 60); };
+for (let b = 0; b < 4 * BARS; b++) {
+  const t = b * BEAT;
+  if (b % 2 === 0) hit(t, kick(0.95), 0.6); else hit(t, snare(0.85), 0.45);
+  if (b === 2) hit(t + BEAT * 0.5, kick(0.7), 0.5);
+  for (let e = 0; e < 2; e++) hit(t + e * BEAT / 2, hat(e ? 0.18 : 0.3), 0.12);
+  hit(t + BEAT * 0.75, snare(0.22), 0.25); // ghost note — quiet, under the threshold
+}
+// normalise to −1 dBFS peak
+{ let m = 0; for (const v of input) m = Math.max(m, Math.abs(v)); const k = 0.891 / m; for (let i = 0; i < N; i++) input[i] *= k; }
+
+// ---------- compressor (Giannoulis et al. 2012, log-domain, smooth branching peak detector) ----------
+const output = new Float32Array(N), grArr = new Float32Array(N);
+function compress() {
+  const T = P.th, R = P.ra, aA = Math.exp(-1 / (P.at / 1000 * FS)), aR = Math.exp(-1 / (P.re / 1000 * FS));
+  let yL = 0;
+  for (let i = 0; i < N; i++) {
+    const xG = 20 * Math.log10(Math.abs(input[i]) + 1e-9);
+    const yG = gc(xG);
+    const xL = xG - yG;
+    yL = xL > yL ? aA * yL + (1 - aA) * xL : aR * yL + (1 - aR) * xL;
+    grArr[i] = yL;
+    output[i] = input[i] * Math.pow(10, (-yL + P.mk) / 20);
+  }
+}
+
+// ---------- envelopes for drawing ----------
+const BINS = 220;
+const envIn = new Float32Array(BINS), envOut = new Float32Array(BINS), envGr = new Float32Array(BINS);
+const db = (v) => 20 * Math.log10(v + 1e-9);
+function envelopes() {
+  const per = N / BINS;
+  for (let b = 0; b < BINS; b++) {
+    let mi = 0, mo = 0, mg = 0;
+    for (let i = Math.floor(b * per); i < Math.floor((b + 1) * per); i++) { mi = Math.max(mi, Math.abs(input[i])); mo = Math.max(mo, Math.abs(output[i])); mg = Math.max(mg, grArr[i]); }
+    envIn[b] = db(mi); envOut[b] = db(mo); envGr[b] = mg;
+  }
+  const rms = (a) => { let s = 0; for (const v of a) s += v * v; return Math.sqrt(s / a.length); };
+  const pk = (a) => { let m = 0; for (const v of a) m = Math.max(m, Math.abs(v)); return m; };
+  $("sIn").textContent = db(pk(input)).toFixed(1) + " dB";
+  $("sOut").textContent = db(pk(output)).toFixed(1) + " dB";
+  $("sGr").textContent = Math.max(...envGr).toFixed(1) + " dB";
+  $("sCr").textContent = (db(pk(output)) - db(rms(output))).toFixed(1) + " / " + (db(pk(input)) - db(rms(input))).toFixed(1) + " dB";
+}
+
+// ---------- isometric scene ----------
+const cv = $("scene"), cx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const C30 = Math.cos(Math.PI / 6), S30 = 0.5;
+const FLOOR = -48, HZ = 52;                 // 48 dB of range drawn 30 units tall
+const hOf = (d) => Math.max(0, (Math.max(d, FLOOR) - FLOOR) / -FLOOR) * HZ;
+let SC = 7.2, OX = W * 0.42, OY = H * 0.72;
+const pr = (x, y, z) => [OX + (x - y) * C30 * SC, OY + (x + y) * S30 * SC - z * SC];
+function poly(pts, fill, stroke, glow, lw = 1.5) {
+  cx.beginPath(); pts.forEach(([x, y, z], i) => { const [a, b] = pr(x, y, z); i ? cx.lineTo(a, b) : cx.moveTo(a, b); });
+  if (fill) { cx.closePath(); cx.fillStyle = fill; cx.fill(); }
+  if (stroke) { cx.strokeStyle = stroke; cx.lineWidth = lw * W / 1600; cx.shadowColor = glow || "transparent"; cx.shadowBlur = glow ? 10 : 0; cx.stroke(); cx.shadowBlur = 0; }
+}
+function line(pts, stroke, glow, lw = 1.5, dash) { cx.setLineDash(dash || []); poly(pts, null, stroke, glow, lw); cx.setLineDash([]); }
+function text(s, x, y, z, color, size = 22, align = "center") {
+  const [a, b] = pr(x, y, z); cx.fillStyle = color; cx.font = `${Math.round(size * W / 1600)}px "Space Mono", monospace`; cx.textAlign = align; cx.fillText(s, a, b);
+}
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COL = { in: css("--in"), out: css("--out"), gr: css("--gr"), ink: css("--ink"), muted: css("--muted"), line: css("--line") };
+const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, "0");
+
+// lanes run along x (time, 0..L), stacked in y (depth): input at the back, GR in the middle, output in front
+const L = 104, LANE = { in: -30, gr: -15, out: 0 }, LW = 7;
+function lane(y, env, col, label, th) {
+  // glass floor
+  poly([[0, y - LW, 0], [L, y - LW, 0], [L, y + LW, 0], [0, y + LW, 0]], alpha(col, 0.05), alpha(col, 0.25), null, 1);
+  // back wall grid every 12 dB
+  for (let d = -36; d <= 0; d += 12) line([[0, y - LW, hOf(d)], [L, y - LW, hOf(d)]], alpha(COL.ink, 0.06), null, 1);
+  // threshold plane on the input lane
+  if (th !== undefined) {
+    const z = hOf(th);
+    poly([[0, y - LW, z], [L, y - LW, z], [L, y + LW, z], [0, y + LW, z]], alpha(COL.in, 0.10), alpha(COL.in, 0.7), COL.in, 1.2);
+    text("threshold " + th + " dB", L + 2, y - LW, z + 3, COL.in, 20, "left");
+  }
+  // filled level curve as a glass curtain standing on the lane's centre line
+  const pts = []; for (let b = 0; b < BINS; b++) pts.push([(b + 0.5) / BINS * L, y, hOf(env[b])]);
+  poly([[0, y, 0], ...pts, [L, y, 0]], alpha(col, 0.16));
+  line(pts, col, col, 2);
+  text(label, L + 2, y + LW, hOf(env[BINS - 1]) + 2, col, 20, "left");
+}
+function grLane(y) {
+  poly([[0, y - LW, HZ], [L, y - LW, HZ], [L, y + LW, HZ], [0, y + LW, HZ]], alpha(COL.gr, 0.04), alpha(COL.gr, 0.25), null, 1);
+  const k = HZ / 48; // same dB scale as the level lanes, hanging down from the top
+  const pts = []; for (let b = 0; b < BINS; b++) pts.push([(b + 0.5) / BINS * L, y, HZ - envGr[b] * k]);
+  poly([[0, y, HZ], ...pts, [L, y, HZ]], alpha(COL.gr, 0.22));
+  line(pts, COL.gr, COL.gr, 2);
+  text("gain reduction ↓", 4, y - LW, HZ + 3, COL.gr, 20, "left");
+}
+// transfer curve, standing in a plane that faces the viewer (input runs screen-left → right, output up)
+const TX = { x: -74, y: 34, S: 1.4, D: 8 };
+const TSIDE = 48 * TX.S * Math.SQRT2 * Math.cos(Math.PI / 6); // screen width of the graph in world units → same height = square
+const tz = (o) => Math.max(0, Math.min(1.08, (o - FLOOR) / -FLOOR)) * TSIDE;
+const R2 = Math.SQRT1_2;
+function tmap(i, o, back = 0) { const d = (i - FLOOR) * TX.S; return [TX.x + d * R2 - back * R2, TX.y - d * R2 - back * R2, tz(o)]; }
+function transfer(levelNow) {
+  const out = (i) => gc(i) + P.mk;
+  // axes and 12 dB grid
+  for (let d = -36; d <= 0; d += 12) { line([tmap(FLOOR, d, TX.D), tmap(0, d, TX.D)], alpha(COL.ink, 0.07), null, 1); line([tmap(d, FLOOR, TX.D), tmap(d, 0, TX.D)], alpha(COL.ink, 0.07), null, 1); }
+  line([tmap(FLOOR, FLOOR), tmap(0, FLOOR)], alpha(COL.ink, 0.4), null, 1.2);
+  line([tmap(FLOOR, FLOOR), tmap(FLOOR, 0)], alpha(COL.ink, 0.4), null, 1.2);
+  line([tmap(FLOOR, FLOOR), tmap(0, 0)], alpha(COL.ink, 0.45), null, 1.2, [6, 6]);
+  const front = [], back = [];
+  for (let i = FLOOR; i <= 0.001; i += 0.5) { front.push(tmap(i, out(i))); back.push(tmap(i, out(i), TX.D)); }
+  poly([...front, ...back.slice().reverse()], alpha(COL.out, 0.1));
+  line(back, alpha(COL.out, 0.35), null, 1);
+  line(front, COL.out, COL.out, 2.4);
+  if (P.kn > 0) { // the knee: where the curve bends from 1:1 into the ratio
+    const a = Math.max(FLOOR, P.th - P.kn / 2), b = Math.min(0, P.th + P.kn / 2);
+    poly([tmap(a, FLOOR), tmap(b, FLOOR), tmap(b, out(b)), tmap(a, out(a))], alpha(COL.in, 0.12));
+    const seg = []; for (let i = a; i <= b + 0.01; i += 0.25) seg.push(tmap(i, out(i)));
+    line(seg, COL.in, COL.in, 3.2);
+    text("knee " + P.kn + " dB", ...tmap((a + b) / 2, FLOOR + 8), COL.in, 17);
+  }
+  line([tmap(P.th, out(P.th)), tmap(P.th, out(P.th), TX.D)], COL.in, COL.in, 3);
+  line([tmap(P.th, FLOOR), tmap(P.th, out(P.th))], alpha(COL.in, 0.6), null, 1, [4, 5]);
+  text("no compressor", ...tmap(-8, -2), COL.muted, 17);
+  text("level in →", ...tmap(-24, FLOOR - 9), COL.muted, 17);
+  text("level out", ...tmap(FLOOR, 2), COL.muted, 17);
+  if (levelNow > FLOOR + 1) {
+    for (const [p, c] of [[tmap(levelNow, levelNow), COL.in], [tmap(levelNow, out(levelNow)), COL.out]]) { const [a, b] = pr(...p); cx.beginPath(); cx.arc(a, b, 7, 0, 7); cx.strokeStyle = c; cx.lineWidth = 2.4; cx.shadowColor = c; cx.shadowBlur = 12; cx.stroke(); cx.shadowBlur = 0; }
+    const [a1, b1] = pr(...tmap(levelNow, levelNow)), [a2, b2] = pr(...tmap(levelNow, out(levelNow)));
+    cx.strokeStyle = alpha(COL.gr, 0.9); cx.lineWidth = 2; cx.beginPath(); cx.moveTo(a1, b1); cx.lineTo(a2, b2); cx.stroke();
+  }
+}
+
+function draw(phase) {
+  cx.clearRect(0, 0, W, H);
+  // floor grid
+  for (let x = -8; x <= L + 4; x += 8) line([[x, -40, 0], [x, 12, 0]], alpha(COL.ink, 0.035), null, 1);
+  for (let y = -40; y <= 12; y += 8) line([[-8, y, 0], [L + 4, y, 0]], alpha(COL.ink, 0.035), null, 1);
+  lane(LANE.in, envIn, COL.in, "input", P.th);
+  grLane(LANE.gr);
+  lane(LANE.out, envOut, COL.out, "output");
+  // playhead plane across all lanes
+  const x = phase * L;
+  poly([[x, LANE.in - LW, 0], [x, LANE.out + LW, 0], [x, LANE.out + LW, HZ + 2], [x, LANE.in - LW, HZ + 2]], alpha(COL.ink, 0.06), alpha(COL.ink, 0.5), null, 1);
+  const b = Math.max(0, Math.min(BINS - 1, Math.floor((phase || 0) * BINS)));
+  transfer(envIn[b]);
+  $("grBig").firstChild.nodeValue = (envGr[b] >= 0.05 ? "−" : "") + envGr[b].toFixed(1);
+  text("time →", L / 2, 12, 0, COL.muted, 18);
+}
+
+// fit the projection to the scene once
+(function fit() {
+  const pts = []; for (const x of [-4, L + 26]) for (const y of [-34, 8]) for (const z of [0, HZ + 4]) pts.push([x, y, z]);
+  for (const z of [-8, TSIDE + 6]) { pts.push([TX.x - 4, TX.y + 4, z]); pts.push([TX.x + 48 * TX.S * R2, TX.y - 48 * TX.S * R2, z]); }
+  SC = 1; OX = 0; OY = 0; const sp = pts.map((p) => pr(...p));
+  const minX = Math.min(...sp.map((p) => p[0])), maxX = Math.max(...sp.map((p) => p[0])), minY = Math.min(...sp.map((p) => p[1])), maxY = Math.max(...sp.map((p) => p[1]));
+  SC = Math.min((W - 24) / (maxX - minX), (H - 16) / (maxY - minY)); OX = 12 - minX * SC + (W - 24 - (maxX - minX) * SC) / 2; OY = 8 - minY * SC + (H - 16 - (maxY - minY) * SC) / 2;
+})();
+
+// ---------- controls ----------
+function readControls() {
+  P.th = +$("th").value; P.ra = RATIOS[+$("ra").value]; P.at = ATK[+$("at").value]; P.re = REL[+$("re").value]; P.mk = +$("mk").value; P.kn = +$("kn").value;
+  $("thv").textContent = P.th + " dB"; $("rav").textContent = RATIO_TXT[+$("ra").value]; $("atv").textContent = P.at + " ms"; $("rev").textContent = P.re + " ms"; $("mkv").textContent = "+" + P.mk + " dB"; $("knv").textContent = P.kn ? P.kn + " dB" : "hard";
+  const r = RATIO_TXT[+$("ra").value];
+  $("cap").textContent = P.ra >= 1000
+    ? "∞:1 הוא Limiter: מעל ה-Threshold האות לא עולה בכלל. רואים את הציאן נחתך בקו ישר."
+    : (P.kn ? `Knee של ${P.kn} dB: הלחיצה מתחילה בהדרגה ${P.kn / 2} dB לפני ה-Threshold ומגיעה ל-${r} רק ${P.kn / 2} dB אחריו. ` : "") + `מעל ה-Threshold, כל ${P.ra} dB שנכנסים יוצאים כ-1 dB (${r}). Attack של ${P.at} ms ${P.at <= 1 ? "תופס גם את הטרנזיינט הראשון" : "משאיר את הטרנזיינט לעבור לפני שהלחיצה נכנסת"}; Release של ${P.re} ms ${P.re >= 500 ? "משאיר את הלחיצה גם על ה-Ghost note — זה Pumping." : "משחרר לפני המכה הבאה."}`;
+  compress(); envelopes(); refreshAudio();
+}
+["th", "ra", "at", "re", "kn", "mk"].forEach((id) => $(id).addEventListener("input", readControls));
+
+// ---------- audio: the same arrays the picture draws ----------
+let ac = null, src = null, gainWet = null, gainDry = null, t0 = 0, playing = false, wet = true;
+function buffers() { const bi = ac.createBuffer(1, N, FS), bo = ac.createBuffer(1, N, FS); bi.copyToChannel(input, 0); bo.copyToChannel(output, 0); return [bi, bo]; }
+function start(offset) {
+  const [bi, bo] = buffers();
+  const si = ac.createBufferSource(), so = ac.createBufferSource();
+  si.buffer = bi; so.buffer = bo; si.loop = so.loop = true;
+  si.connect(gainDry); so.connect(gainWet);
+  const when = ac.currentTime + 0.03; si.start(when, offset); so.start(when, offset);
+  t0 = when - offset; src = [si, so];
+}
+function stop() { if (src) src.forEach((s) => { try { s.stop(); } catch (e) {} }); src = null; }
+function refreshAudio() { if (!playing || !ac) return; const off = ((ac.currentTime - t0) % DUR + DUR) % DUR; stop(); start(off); }
+$("play").addEventListener("click", async () => {
+  if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: FS }); gainWet = ac.createGain(); gainDry = ac.createGain(); const m = ac.createGain(); m.gain.value = 0.8; gainWet.connect(m); gainDry.connect(m); m.connect(ac.destination); setAB(); }
+  await ac.resume();
+  playing = !playing; $("play").setAttribute("aria-pressed", String(playing)); $("play").textContent = playing ? "■ עצור" : "▶ השמע";
+  if (playing) start(0); else stop();
+});
+function setAB() { if (!ac) return; const t = ac.currentTime; gainWet.gain.setTargetAtTime(wet ? 1 : 0, t, 0.01); gainDry.gain.setTargetAtTime(wet ? 0 : 1, t, 0.01); }
+$("ab").addEventListener("click", () => { wet = !wet; $("ab").setAttribute("aria-pressed", String(wet)); $("ab").textContent = wet ? "שומעים: אחרי הקומפרסור" : "שומעים: Bypass (המקור)"; setAB(); });
+
+// ---------- loop ----------
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const tStart = performance.now();
+function frame(now) {
+  let phase;
+  if (playing && ac) phase = (((ac.currentTime - t0) % DUR) + DUR) % DUR / DUR;
+  else phase = still ? 0.52 : ((now - tStart) / 1000 / (DUR * 2)) % 1; // silent preview runs at half speed
+  draw(phase);
+  requestAnimationFrame(frame);
+}
+readControls();
+document.fonts && document.fonts.ready.then(() => draw(0.52));
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
