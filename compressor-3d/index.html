@@ -9,9 +9,9 @@
 :root{
   color-scheme:dark;
   --bg:#12130e; --bg2:#1c1d14; --ink:#e8e8df; --muted:#8f907f; --line:#3a3b2e;
-  --in:#ff3d8b;   /* before the compressor / threshold */
-  --out:#2fe0ff;  /* after the compressor */
-  --gr:#ff9a2e;   /* gain reduction */
+  --in:#ff4fa3;   /* pink: before the compressor / threshold */
+  --out:#6dff3a;  /* VU-meter green: after the compressor */
+  --gr:#ff8a1f;   /* orange: gain reduction */
   --display:"Space Mono", ui-monospace, Menlo, monospace;
   --body:"Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -32,12 +32,12 @@ canvas{width:100%;height:auto;display:block;aspect-ratio:16/11;max-width:100%}
 .knob label{font-family:var(--display);font-size:11px;letter-spacing:1px;font-weight:700}
 .knob output{font-family:var(--display);font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
 .knob input{width:100%}
-.k-th input{accent-color:#ff3d8b}.k-ra input{accent-color:#2fe0ff}.k-mk input{accent-color:#ff9a2e}.k-kn{color:#ff8fc0}.k-kn input{accent-color:#ff8fc0}.k-at input,.k-re input{accent-color:#c9c9bd}
+.k-th input{accent-color:#ff4fa3}.k-ra input{accent-color:#6dff3a}.k-mk input{accent-color:#ff8a1f}.k-kn{color:#ff9ccc}.k-kn input{accent-color:#ff9ccc}.k-at input,.k-re input{accent-color:#c9c9bd}
 .k-th{color:var(--in)} .k-ra{color:var(--out)} .k-at,.k-re{color:#c9c9bd} .k-mk{color:var(--gr)}
 .bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 button{font:600 13px var(--body);color:var(--ink);background:#25261b;border:1px solid var(--line);border-radius:8px;padding:9px 14px;cursor:pointer}
-button[aria-pressed="true"]{border-color:var(--out);color:var(--out);box-shadow:0 0 10px #2fe0ff40}
-button.play[aria-pressed="true"]{border-color:var(--gr);color:var(--gr);box-shadow:0 0 10px #ff9a2e40}
+button[aria-pressed="true"]{border-color:var(--out);color:var(--out);box-shadow:0 0 10px #6dff3a40}
+button.play[aria-pressed="true"]{border-color:var(--gr);color:var(--gr);box-shadow:0 0 10px #ff8a1f40}
 button:focus-visible,input:focus-visible{outline:2px solid var(--out);outline-offset:2px}
 .stats{direction:ltr;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;font-family:var(--display);font-size:12px;color:var(--muted);text-align:center}
 .stats b{display:block;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
@@ -59,7 +59,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--out);outline-of
     <div class="big" id="grBig">0.0<small>dB GR</small></div>
   </header>
 
-  <canvas id="scene" width="2200" height="1512" role="img" aria-label="סצנה איזומטרית: משמאל עקומת ההעברה של הקומפרסור, מימין שלושה מסלולי זמן — אות נכנס בוורוד עם מישור ה-Threshold, Gain Reduction בכתום, ואות יוצא בציאן."></canvas>
+  <canvas id="scene" width="2200" height="1512" role="img" aria-label="סצנה איזומטרית: משמאל עקומת ההעברה של הקומפרסור, מימין שלושה מסלולי זמן — אות נכנס בוורוד עם מישור ה-Threshold, Gain Reduction בכתום, ואות יוצא בירוק."></canvas>
 
   <div class="legend">
     <span><i style="background:var(--in);color:var(--in)"></i>Input + Threshold</span>
@@ -278,7 +278,7 @@ function readControls() {
   $("thv").textContent = P.th + " dB"; $("rav").textContent = RATIO_TXT[+$("ra").value]; $("atv").textContent = P.at + " ms"; $("rev").textContent = P.re + " ms"; $("mkv").textContent = "+" + P.mk + " dB"; $("knv").textContent = P.kn ? P.kn + " dB" : "hard";
   const r = RATIO_TXT[+$("ra").value];
   $("cap").textContent = P.ra >= 1000
-    ? "∞:1 הוא Limiter: מעל ה-Threshold האות לא עולה בכלל. רואים את הציאן נחתך בקו ישר."
+    ? "∞:1 הוא Limiter: מעל ה-Threshold האות לא עולה בכלל. רואים את הירוק נחתך בקו ישר."
     : (P.kn ? `Knee של ${P.kn} dB: הלחיצה מתחילה בהדרגה ${P.kn / 2} dB לפני ה-Threshold ומגיעה ל-${r} רק ${P.kn / 2} dB אחריו. ` : "") + `מעל ה-Threshold, כל ${P.ra} dB שנכנסים יוצאים כ-1 dB (${r}). Attack של ${P.at} ms ${P.at <= 1 ? "תופס גם את הטרנזיינט הראשון" : "משאיר את הטרנזיינט לעבור לפני שהלחיצה נכנסת"}; Release של ${P.re} ms ${P.re >= 500 ? "משאיר את הלחיצה גם על ה-Ghost note — זה Pumping." : "משחרר לפני המכה הבאה."}`;
   compress(); envelopes(); refreshAudio();
 }
