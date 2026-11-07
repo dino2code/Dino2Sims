@@ -12,6 +12,7 @@ Live Sound Engineering Simulations
 | `vocal-compressor/` | סימולטור קומפרסור לשירה: Attack, Release, Ratio, Soft Knee ו-Makeup Gain, עם הדרכה בשמונה שלבים, צליל בזמן אמת, קובץ משלכם או הקלטה במיקרופון |
 | `compressor-3d/` | קומפרסור בתלת־ממד איזומטרי: לולאת תופים מסונתזת דרך קומפרסור feed-forward, עם מסלולי Input/Threshold, Gain Reduction ו-Output, עקומת העברה ריבועית, Knee, צליל והשוואת Bypass |
 | `delay-calculator/` | מחשבון דיליי רמקולים: הדיליי לרמקול שמקדים לפי הפרש המרחקים מנקודת ההאזנה, עם תיקון לטמפרטורה, גבהים והדמיה תלת־ממדית שאפשר להזיז בה את הרמקולים ואת נקודת ההאזנה |
+| `line-array/` | Line array באולם: חתך צד עם יציע, מפת רמות (Pink או פס 1/3 אוקטבה), line array מול point source, זוויות ו-AutoSplay, קווי כיוון וזריקה, אורך המערך ומרחק המעבר לשדה רחוק (van Veen), מגבלות תלייה לפי d&b Y-Series והדגמת site / frame angle |
 | [AudiofileCheck](https://dino2code.github.io/AudiofileCheck/) (repository נפרד) | AudioCheck: בדיקת האיכות האמיתית של קובצי אודיו, כולל bit depth, sample rate, מקור lossy, ויניל, מאסטרינג וציון איכות |
 
 כל סימולטור הוא קובץ HTML אחד שעובד בדפדפן, בלי התקנה ובלי שרת.

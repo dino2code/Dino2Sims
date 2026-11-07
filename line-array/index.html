@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Line Array באולם</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Rubik:wght@500;700&display=swap">
+<style>
+/* layout: one hall section across the top like a prediction screen; controls, two graphs and five guided scenes below */
+:root{
+  --bg:#f3f2f6; --fg:#1c1a24; --muted:#5d596b; --line:#d6d3de; --panel:#ffffff;
+  --accent:#c2226a; --accent2:#d9661a; --ok:#2f8f4e;
+  --scope:#121019; --scope-fg:#e9e6f2; --scope-line:#3a3548;
+  --f-display:"Rubik","Assistant",system-ui,sans-serif;
+  --f-body:"Assistant",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c0b11; --fg:#ece9f4; --muted:#a19cb3; --line:#2b2737; --panel:#16141e;
+  --accent:#ff4fa0; --accent2:#ff9a3d; --ok:#6dff3a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0c0b11; --fg:#ece9f4; --muted:#a19cb3; --line:#2b2737; --panel:#16141e;
+  --accent:#ff4fa0; --accent2:#ff9a3d; --ok:#6dff3a; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:1240px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);margin:0;text-wrap:balance;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+.scope{background:var(--scope);color:var(--scope-fg);border-radius:10px;overflow:hidden;border:1px solid var(--scope-line)}
+.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--scope-line)}
+.seg{display:inline-flex;border:1px solid var(--scope-line);border-radius:7px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--scope-fg);font:600 14px var(--f-body);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#ff4fa0;color:#140a12}
+.seg button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ff9a3d;outline-offset:2px}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:pointer}
+.chk input{accent-color:#ff4fa0}
+.hall{position:relative}
+.hall canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
+.legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px 10px;font:12px var(--f-mono);color:#b9b4c9;border-top:1px solid var(--scope-line)}
+.ramp{width:220px;max-width:50vw;height:10px;border-radius:3px}
+.ramp-scale{display:flex;justify-content:space-between;width:220px;max-width:50vw}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.chip b{display:block;direction:ltr;text-align:right;font:500 22px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--fg)}
+.chip span{font-size:13px;color:var(--muted)}
+.chip.good b{color:var(--ok)} .chip.bad b{color:var(--accent)}
+.controls{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.controls{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:12px;align-content:start;min-width:0}
+.box h2{font-family:var(--f-display);font-weight:500;font-size:17px;margin:0}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr) 84px;gap:10px;align-items:center}
+@media (max-width:460px){.row{grid-template-columns:minmax(0,1fr) 78px}.row input[type=range],.row select{grid-column:1/-1}}
+.row label{font-size:14px;color:var(--muted)}
+.row output{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;text-align:left;direction:ltr}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.btn{background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:7px;padding:6px 12px;font:600 14px var(--f-body);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.btn.auto{border-color:var(--accent2)}
+.btn:disabled{opacity:.6;cursor:progress}
+.auto-res b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
+.splays{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:6px;max-height:260px;overflow:auto;direction:ltr}
+.sp{white-space:nowrap;display:flex;align-items:center;justify-content:space-between;gap:4px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:13px var(--f-mono)}
+.sp button{width:24px;height:24px;border:0;border-radius:4px;background:var(--line);color:var(--fg);cursor:pointer;font:600 14px var(--f-mono)}
+.sp b{font-weight:500;min-width:30px;text-align:center}
+.note{font-size:13px;color:var(--muted);margin:0}
+.tbl{overflow-x:auto}
+.tilt{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.tilt{grid-template-columns:minmax(0,1fr)}}
+.tilt-view{background:var(--scope);border:1px solid var(--scope-line);border-radius:10px;overflow:hidden}
+.tilt-view svg{display:block;width:100%;height:auto}
+[hidden]{display:none!important}
+.tilt-ctl{display:grid;gap:12px;align-content:start;min-width:0}
+.tseg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;overflow:hidden;justify-self:start}
+.tseg button{background:none;border:0;color:var(--fg);font:600 14px var(--f-body);padding:6px 12px;cursor:pointer}
+.tseg button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+.trow{display:grid;gap:4px}.trow label{font-size:14px;color:var(--muted)}
+.tscale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.tread{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tread span{color:var(--muted);font-size:14px}
+.tread b{font:500 30px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--accent)}
+.tseg button:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+
+.rig-status{border-radius:8px;padding:10px 12px;font-weight:600;font-size:15px;border:1px solid var(--line)}
+.rig-status.ok{border-color:var(--ok);color:var(--ok)}
+.rig-status.warn{border-color:var(--accent2);color:var(--accent2)}
+.rig-status.stop{border-color:var(--accent);color:var(--accent)}
+.rig-status.na{color:var(--muted)}
+.rig{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}
+.rig dt{color:var(--muted)} .rig dd{margin:0}
+@media (max-width:460px){.rig{grid-template-columns:minmax(0,1fr)} .rig dd{margin-bottom:6px}}
+#aimT{border-collapse:collapse;width:100%;font-size:14px;min-width:460px}
+#aimT th{font:600 12px var(--f-body);color:var(--muted);text-align:start;padding:6px 10px;border-bottom:1px solid var(--line);letter-spacing:.02em}
+#aimT td{padding:5px 10px;border-bottom:1px solid var(--line)}
+#aimT td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+#aimT td i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:8px;vertical-align:-1px}
+#aimT tr.miss td:last-child{color:var(--accent)}
+#aimT tr.hl td,#aimT tbody tr:hover td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+#aimT tbody tr{cursor:default}
+.graphs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px}
+.graphs .scope h3{font:500 15px var(--f-display);margin:0;padding:10px 12px 0}
+.graphs canvas{display:block;width:100%;height:auto}
+.keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 12px 10px;font:12px var(--f-mono);color:#b9b4c9}
+.keys i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-inline-end:5px}
+.scenes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scene h3{font:500 16px var(--f-display);margin:0}
+.scene p{margin:0;font-size:14px;color:var(--muted);flex:1}
+.scene .btn{align-self:flex-start}
+.scene.active{border-color:var(--accent)}
+section.text{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:18px}
+section.text h2{font:500 18px var(--f-display);margin:0 0 6px}
+section.text ul{margin:0;padding-inline-start:20px;font-size:14px;color:var(--muted)}
+section.text li{margin-bottom:4px}
+a{color:var(--accent)}
+.ltr{direction:ltr;unicode-bidi:isolate}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+<div class="wrap" dir="rtl">
+<header>
+  <div class="eyebrow">Fig 4 · Line array · חתך אולם</div>
+  <h1>Line Array באולם</h1>
+  <p>חתך צד של אולם עם יציע. המפה מראה איך הסאונד הישיר מהמערך מתפזר על הקהל: איפה חזק, איפה חלש, ומה קורה כשמשנים זוויות, מספר תיבות, גובה ותדר. לחצו על הקהל כדי להזיז את המאזין.</p>
+</header>
+
+<div class="scope">
+  <div class="bar" dir="rtl">
+    <div class="seg" role="group" aria-label="סוג מערכת">
+      <button id="sysLA" aria-pressed="true">Line array</button>
+      <button id="sysPS" aria-pressed="false">Point source</button>
+    </div>
+    <div class="seg" role="group" aria-label="אות">
+      <button id="modePink" aria-pressed="true">Pink (פס רחב)</button>
+      <button id="modeTone" aria-pressed="false">פס תדר בודד</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="rays"> קווי כיוון וזריקה</label>
+    <label class="chk"><input type="checkbox" id="waves"> הצג גלים (עד 1 kHz)</label>
+  </div>
+  <div class="hall" dir="ltr"><canvas id="hall" width="1600" height="690" aria-label="חתך אולם עם מפת רמות"></canvas></div>
+  <div class="legend" dir="rtl">
+    <span>רמה ביחס לעמדת FOH</span>
+    <div dir="ltr"><canvas class="ramp" id="ramp" width="220" height="10"></canvas>
+      <div class="ramp-scale"><span>−24</span><span>−18</span><span>−12</span><span>−6</span><span>0</span><span>+6 dB</span></div></div>
+    <span id="modeNote"></span>
+  </div>
+</div>
+
+<div class="chips">
+  <div class="chip" id="cSpread"><b>–</b><span>הפרש רמות בקהל הפתוח (רצפה ויציע)</span></div>
+  <div class="chip" id="cUnder"><b>–</b><span>מתחת ליציע, ממוצע ביחס ל-FOH</span></div>
+  <div class="chip" id="cCouple"><b>–</b><span>תוספת מהקשירה ב-FOH, לעומת התיבה החזקה לבדה</span></div>
+  <div class="chip" id="cLen"><b>–</b><span id="cLenTxt">אורך המערך</span></div>
+  <div class="chip" id="cTrans"><b>–</b><span id="cTransTxt">מרחק המעבר לשדה רחוק</span></div>
+</div>
+
+<div class="controls">
+  <div class="box">
+    <h2>המערך</h2>
+    <div class="row"><label for="n">מספר תיבות</label><input type="range" id="n" min="4" max="16" step="1"><output id="nO"></output></div>
+    <div class="row"><label for="trim">גובה תלייה (trim)</label><input type="range" id="trim" min="7" max="12.5" step="0.1"><output id="trimO"></output></div>
+    <div class="row"><label for="site" id="siteL">זווית המערך (site)</label><input type="range" id="site" min="-30" max="8" step="1"><output id="siteO"></output></div>
+    <div class="row"><label for="freq">פס תדר (1/3 אוקטבה)</label><input type="range" id="freq" min="0" max="24" step="1"><output id="freqO"></output></div>
+    <div class="row"><label for="deck">מאזין</label>
+      <select id="deck"><option value="floor">רצפת האולם</option><option value="bal">יציע</option></select><output id="lisO"></output></div>
+    <div class="row"><label for="lisx">מרחק המאזין</label><input type="range" id="lisx" min="2" max="30" step="0.25"><output id="lisxO"></output></div>
+  </div>
+  <div class="box">
+    <h2>זוויות בין התיבות (splay)</h2>
+    <div class="presets">
+      <button class="btn" id="pStraight">ישר: 0° בכולן</button>
+      <button class="btn" id="pArc">קשת קבועה: 4°</button>
+      <button class="btn" id="pJ">J מותאם לאולם</button>
+      <button class="btn auto" id="pAuto">AutoSplay</button>
+    </div>
+    <p class="note auto-res" id="autoRes" role="status">AutoSplay מחשב זוויות ו-site למספר התיבות ולגובה התלייה הנוכחיים, כך שהפרש הרמות בקהל הפתוח יהיה הקטן ביותר.</p>
+    <div class="splays" id="splays"></div>
+    <p class="note">כל תיבה תלויה מנקודת החיבור הקדמית, והזווית פותחת רווח מאחור. טווח 0°–14° בצעדים של 1°, כמו ב-d&amp;b Y8. ה-J חושב בהדמיה הזו כדי לצמצם את הפרש הרמות באולם הזה. הוא לא הגדרה של היצרן.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h2>כיוון וזריקה לכל תיבה</h2>
+  <div class="tbl"><table id="aimT">
+    <thead><tr><th>תיבה</th><th>splay מעליה</th><th>זווית לאופק</th><th>זריקה</th><th>הציר פוגע ב</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p class="note">הקו של כל תיבה הוא הציר שלה (on-axis), מהחזית ועד שהוא פוגע במישור האוזניים של הקהל (1.2 m מעל הרצפה). זריקה היא אורך הקו במטרים. קו מקווקו ושורה אדומה פירושם שהציר לא פוגע בקהל, למשל בחזית היציע או בתקרה, ושם האנרגיה הופכת להחזרה. העבירו את העכבר על שורה כדי להדגיש את התיבה בחתך.</p>
+</div>
+
+<div class="box" id="rigBox">
+  <h2>תלייה (rigging): מגבלות היצרן</h2>
+  <div class="rig-status" id="rigStatus" role="status"></div>
+  <dl class="rig" id="rigList"></dl>
+  <p class="note">המספרים לפי d&amp;b Y-Series Rigging manual 1.6 עבור Y8/Y12 עם Y Flying frame. ההדמיה לא מחליפה חישוב עומסים ב-ArrayCalc, ולא את אישור נקודות התלייה בבניין. תלייה מתבצעת רק על ידי אנשי מקצוע מוסמכים, לפי הוראות היצרן והתקנות המקומיות.</p>
+</div>
+
+<div class="box" id="tiltBox">
+  <h2>איך נותנים זווית לכל המערך</h2>
+  <p class="note">המונח המקצועי: <b>site angle</b> ב-L-Acoustics (נקרא גם tilt angle), ו-<b>frame angle</b> ב-d&amp;b. זו ההטיה של כל המערך יחד. הזוויות בין התיבות (splay) לא משתנות.</p>
+  <div class="tilt">
+    <div class="tilt-view" dir="ltr"><svg id="tiltSvg" viewBox="0 0 560 470" role="img" aria-label="מערך תלוי מנקודת תלייה, עם מרכז הכובד וזווית ההטיה"></svg></div>
+    <div class="tilt-ctl">
+      <div class="tseg" role="group" aria-label="סוג תלייה"><button id="tOne" aria-pressed="true">נקודת תלייה אחת</button><button id="tTwo" aria-pressed="false">שתי נקודות (2 מנועים)</button></div>
+      <div class="tseg" role="group" aria-label="צורת המערך"><button id="tStraight" aria-pressed="false">מערך ישר</button><button id="tJ" aria-pressed="true">מערך J</button></div>
+      <div class="trow" id="tHoleRow"><label for="tHole">החור ב-load adapter</label><input type="range" id="tHole" min="0" max="10" step="1" value="6" dir="ltr"><div class="tscale" dir="ltr"><span>אחורה</span><span>קדימה, לכיוון הקהל</span></div></div>
+      <div class="trow" id="tDhRow" hidden><label for="tDh">המנוע האחורי ביחס לקדמי</label><input type="range" id="tDh" min="-6" max="6" step="0.5" value="0" dir="ltr"><div class="tscale" dir="ltr"><span>נמוך יותר</span><span id="tDhO">0 cm</span><span>גבוה יותר</span></div></div>
+      <div class="tread"><span>זווית המערך</span><b id="tAng" class="ltr">0.0°</b><span id="tDir"></span></div>
+      <p class="note" id="tExplain"></p>
+    </div>
+  </div>
+  <p class="note">מיקומי החורים ומידות ה-frame כאן להמחשה בלבד, ואינם מידות ה-Y Flying frame. בפועל ArrayCalc או Soundvision נותנים את החור לכל תצורה, ובודקים את הזווית במד שיפוע אחרי ההרמה.</p>
+</div>
+
+<div class="graphs">
+  <div class="scope">
+    <h3>רמה לאורך הקהל לפי מרחק מהמערך</h3>
+    <canvas id="gDist" width="760" height="360"></canvas>
+    <div class="keys" dir="rtl"><span><i style="background:#ff4fa0"></i>רצפה</span><span><i style="background:#ff9a3d"></i>יציע</span><span><i style="background:#8f8aa3"></i>קו ייחוס −6 dB לכל הכפלת מרחק</span><span><i style="background:#6dff3a"></i>קו ייחוס −3 dB לכל הכפלת מרחק</span><span><i style="background:#4fd8ff"></i>מרחק המעבר לשדה רחוק</span></div>
+  </div>
+  <div class="scope">
+    <h3>תגובת תדר אצל המאזין מול FOH</h3>
+    <canvas id="gFreq" width="760" height="360"></canvas>
+    <div class="keys" dir="rtl"><span><i style="background:#ff4fa0"></i>מאזין</span><span><i style="background:#8f8aa3"></i>FOH</span></div>
+  </div>
+</div>
+
+<section>
+  <div class="eyebrow" style="margin-bottom:8px">חמש תמונות להסבר בכיתה</div>
+  <div class="scenes">
+    <div class="scene" data-scene="couple"><h3>קשירה: הרבה תיבות, חזית גל אחת</h3>
+      <p>תיבות צמודות, קרובות זו לזו ביחס לאורך הגל, מתחברות לחזית גל אחת (coupling). קרוב למערך ישר הרמה יורדת לאט יותר, בערך 3 dB להכפלת מרחק, ורחוק ממנו היא חוזרת ל-6 dB. ההגדרה מציגה 12 תיבות ישרות ב-500 Hz עם גלים. אחר כך החליפו ל-Point source והשוו.</p>
+      <button class="btn" data-go="couple">הצג</button></div>
+    <div class="scene" data-scene="j"><h3>הזוויות מעצבות את הכיסוי (J)</h3>
+      <p>התיבות העליונות, עם זוויות קטנות, מכוונות יחד למושבים הרחוקים ומחברות שם רמה. התחתונות, עם זוויות גדולות, מתפזרות על השורות הקרובות. כך יותר תיבות עובדות על הרחוקים ומפצות על המרחק. השוו להגדרה "ישר".</p>
+      <button class="btn" data-go="j">הצג</button></div>
+    <div class="scene" data-scene="freq"><h3>התדר משנה את התמונה</h3>
+      <p>ב-125 Hz אורך הגל הוא 2.7 m, כמעט כמו המערך כולו, ולכן המערך מתנהג כמקור אחד רחב והזוויות כמעט לא משנות. הזיזו את פס התדר ל-8 kHz: כל תיבה צרה מאוד, והזוויות הן שקובעות לאן מגיע הסאונד.</p>
+      <button class="btn" data-go="freq">הצג</button></div>
+    <div class="scene" data-scene="ps"><h3>Point source באותו אולם</h3>
+      <p>רמקול אחד עם צופר של 40° אנכי, תלוי באותה נקודה. כל המושבים שומעים מקור אחד, הרמה יורדת 6 dB בכל הכפלת מרחק, ואפשר רק לכוון אותו, לא לחלק את האנרגיה בין קרוב לרחוק. השוו את הפרש הרמות בקהל.</p>
+      <button class="btn" data-go="ps">הצג</button></div>
+    <div class="scene" data-scene="shadow"><h3>הצל מתחת ליציע</h3>
+      <p>היציע חוסם את הקו הישיר מהמערך למושבים שמתחתיו, ושום זווית לא תפתור את זה. באולם אמיתי מוסיפים שם רמקולי fill או delay. המאזין מוצב בשורות האחרונות מתחת ליציע.</p>
+      <button class="btn" data-go="shadow">הצג</button></div>
+  </div>
+</section>
+
+<section class="text">
+  <div>
+    <h2>מה ההדמיה מחשבת ומה לא</h2>
+    <ul>
+      <li>רק סאונד ישיר בשדה חופשי. אין החזרות, הדהוד או בליעת אוויר. באולם אמיתי ההחזרות ממלאות חלק מהחורים.</li>
+      <li>חתך דו־ממדי: הכיסוי האופקי לא מחושב. הרמה דועכת לפי 1/r כמו במרחב תלת־ממדי.</li>
+      <li>כל תיבה היא קו מקרין בגובה 257 מ"מ עם פאזה אחידה, כמו מוביל גל של line array, ועם יחס קדימה/אחורה מתון. אין סאבים, EQ, עידון רמות (shading) או דיליי בין התיבות.</li>
+      <li>AutoSplay מחפש זוויות שלמות בין 0° ל-14° שגדלות כלפי מטה, ואת זווית ה-site, כך שהפרש הרמות בקהל הפתוח יהיה הקטן ביותר. אזור הצל מתחת ליציע לא נכלל ביעד, כי זווית לא יכולה לתקן אותו. זה החישוב של ההדמיה, לא האלגוריתם של ArrayCalc או Soundvision.</li>
+      <li>מרחק המעבר לשדה רחוק (הקשת התכולה) מחושב בנוסחה למערך ישר לפי אורך כל המערך. במערך עם קימור J הוא רק הערכה, וכדאי לבדוק מול המפה.</li>
+      <li>הצל של היציע מחושב כהנחתה של 20 dB, בלי עקיפה (diffraction).</li>
+      <li>Pink: הרמה בכל פס 1/3 אוקטבה מ-125 Hz עד 8 kHz, ממוצעת ב-dB, כדי שחסר בגבוהים ייספר כמו חסר בנמוכים.</li>
+      <li>מידות האולם להמחשה: עומק 31 m, יציע שמתחיל 17 m מהבמה, עם תקרה של 4 m מעל הרצפה שמתחתיו. תקרת האולם ב-14 m, ו-FOH ב-14 m מהבמה. תכנון אמיתי נעשה בתוכנת היצרן: d&amp;b ArrayCalc או L-Acoustics Soundvision.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>מקורות</h2>
+    <ul>
+      <li>McCarthy, <i>Sound Systems: Design and Optimization</i>, מהדורה 3: סעיף 3.2.1.3 (Infinite line source: ‏3 dB להכפלה רק למרחק מוגבל, ו"גל גלילי" כמונח שאין עליו הסכמה מדעית); סעיף 4.4.2 (coupled line source, ה-parallel pyramid, coupled point source); סעיף 9.4.1.2 (Line length: כיסוי של כ-72° כשאורך הגל שווה לאורך הקו); סעיפים 9.4.2 ו-9.4.3 (coupled point source ומערך hybrid בצורת J).</li>
+      <li>Everest &amp; Pohlmann, <i>Master Handbook of Acoustics</i>, מהדורה 7, פרק 3: מקור קווי, 3 dB להכפלת מרחק, ושדה קרוב.</li>
+      <li>Merlijn van Veen, "Cylindrical Waves: Hyped or Not?": מתחת לתדר שבו אורך הגל גדול מאורך המערך אין התנהגות line source; נוסחת מרחק המעבר של Heil et al. ‏(1992) ושל Ureda ‏(2001); כל מערך אמיתי הוא היברידי. <a href="https://www.merlijnvanveen.nl/en/study-hall/193-cylindrical-waves-hyped-or-not" target="_blank" rel="noopener">המאמר</a></li>
+      <li>Urban, Heil, Bauman, "Wavefront Sculpture Technology", JAES 51(10), 2003. <a href="https://www.l-acoustics.com/wp-content/uploads/2026/04/Wavefront_Sculpture_Technology_jaes.pdf" target="_blank" rel="noopener">PDF באתר L-Acoustics</a></li>
+      <li>מונחים: d&amp;b ArraySight manual 1.6, סעיף 5.5 ("frame angle"); ‏L-Acoustics, ARCS WiFo rigging manual ("site angle", "tilt angle", הזווית נקבעת לפי החור ונבדקת במד שיפוע). <a href="https://www.dbaudio.com/assets/products/downloads/manuals-documentation/electronics/dbaudio_ArraySight_manual_1.6_en.pdf" target="_blank" rel="noopener">ArraySight</a> · <a href="https://www.bestecaudio.com/wp/wp-content/uploads/ARCSWIFO_RM_EN.pdf" target="_blank" rel="noopener">ARCS WiFo</a></li>
+      <li>d&amp;b audiotechnik, Y-Series Rigging manual 1.6: סעיף 1.3 (עומס מותר: 540 kg ועד 24 תיבות; עד 10 תיבות ו-220 kg בכל תצורה בלי ArrayCalc), סעיף 2.11.3 (זוויות), סעיפים 2.7 ו-2.8 (נקודות תלייה ואבטחה משנית). <a href="https://www.dbaudio.com/assets/products/downloads/manuals-documentation/accessories/dbaudio-rigging-manual-y-series-1.6-en.pdf" target="_blank" rel="noopener">PDF באתר d&amp;b</a></li>
+      <li>d&amp;b audiotechnik, Y8: גובה 257 מ"מ, splay של 0°–14° בצעדים של 1°, עד 24 תיבות במערך. <a href="https://www.dbaudio.com/global/en/products/series/y-series/y8/" target="_blank" rel="noopener">עמוד המוצר</a></li>
+    </ul>
+  </div>
+</section>
+</div>
+
+<script>
+// Line array / point source in a hall section. Direct sound only, free field, 2D section with 3D spreading (1/r).
+// Shared by the page and the node tests (plain script, no exports).
+const C0 = 343;
+const BOX_H = 0.257, BOX_D = 0.375;           // d&b Y8: 257 mm high (as flown), 375 mm deep; splay 0..14 deg in 1 deg steps
+const MAX_SPLAY = 14;
+const HALL = { x0: -3.2, x1: 31.6, z0: -0.5, z1: 14.5, rear: 31, ceil: 14, stageX: 0, stageH: 1.0,
+  balX: 17, balUnder: 4.0, balTop: 4.4, rake: 0.33, ear: 1.2, foh: [14, 1.2], arrX: 0.25 };
+const balFloor = (x) => HALL.balTop + (x - HALL.balX) * HALL.rake;
+// surfaces that block direct sound (balcony underside, front face incl. 1 m parapet, raked balcony floor)
+const OCC = [
+  [HALL.balX, HALL.balUnder, HALL.rear, HALL.balUnder],
+  [HALL.balX, HALL.balUnder, HALL.balX, HALL.balTop + 1.0],
+  [HALL.balX, HALL.balTop, HALL.rear, balFloor(HALL.rear)],
+];
+const OCC_GAIN = 0.1; // -20 dB in the shadow (no diffraction model)
+
+function segHit(ax, az, bx, bz, s) {
+  const [cx, cz, dx, dz] = s;
+  const rx = bx - ax, rz = bz - az, qx = dx - cx, qz = dz - cz;
+  const den = rx * qz - rz * qx;
+  if (Math.abs(den) < 1e-12) return false;
+  const t = ((cx - ax) * qz - (cz - az) * qx) / den;
+  const u = ((cx - ax) * rz - (cz - az) * rx) / den;
+  return t > 1e-6 && t < 1 - 1e-6 && u >= 0 && u <= 1;
+}
+function blocked(ax, az, bx, bz) {
+  for (const s of OCC) if (segHit(ax, az, bx, bz, s)) return true;
+  return false;
+}
+
+// boxes hang from the front rigging point: each splay opens a gap at the back
+function arrayGeom(n, splays, trim, site) {
+  let px = HALL.arrX, pz = trim, a = (site * Math.PI) / 180;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (i > 0) a -= ((splays[i - 1] || 0) * Math.PI) / 180;
+    const ux = Math.cos(a), uz = Math.sin(a), vx = Math.sin(a), vz = -Math.cos(a);
+    const fb = [px + BOX_H * vx, pz + BOX_H * vz];
+    out.push({ kind: "la", cx: px + (BOX_H / 2) * vx, cz: pz + (BOX_H / 2) * vz, a, ux, uz,
+      poly: [[px, pz], fb, [fb[0] - BOX_D * ux, fb[1] - BOX_D * uz], [px - BOX_D * ux, pz - BOX_D * uz]] });
+    px = fb[0]; pz = fb[1];
+  }
+  return out;
+}
+// one conventional 2-way box (40 deg vertical horn), same hang point
+function psGeom(trim, aim) {
+  const a = (aim * Math.PI) / 180, H = 0.6, D = 0.45;
+  const ux = Math.cos(a), uz = Math.sin(a), vx = Math.sin(a), vz = -Math.cos(a);
+  const px = HALL.arrX, pz = trim, fb = [px + H * vx, pz + H * vz];
+  return [{ kind: "ps", cx: px + (H / 2) * vx, cz: pz + (H / 2) * vz, a, ux, uz,
+    poly: [[px, pz], fb, [fb[0] - D * ux, fb[1] - D * uz], [px - D * ux, pz - D * uz]] }];
+}
+
+// directivity of one element. la: a 257 mm line segment (sinc) with a mild front/back ratio.
+function dirOf(s, f, cosT, sinT) {
+  if (s.kind === "la") {
+    const x = ((Math.PI * f) / C0) * BOX_H * sinT;
+    const sc = Math.abs(x) < 1e-6 ? 1 : Math.sin(x) / x;
+    return sc * (0.6 + 0.4 * cosT);
+  }
+  const th = Math.atan2(Math.abs(sinT), cosT);
+  const bw = Math.min(Math.PI, ((40 * Math.PI) / 180) * Math.max(1, 1000 / f));
+  const r = th / (bw / 2);
+  return Math.max(Math.pow(0.5, r * r), 0.03);
+}
+
+// geometry cache for a list of points: per (point, source) distance, cos/sin to the element axis, shadow gain
+function geomFor(src, pts) {
+  const n = pts.length / 2, m = src.length;
+  const R = new Float32Array(n * m), CS = new Float32Array(n * m), SN = new Float32Array(n * m), G = new Float32Array(n * m);
+  for (let p = 0; p < n; p++) {
+    const x = pts[2 * p], z = pts[2 * p + 1];
+    for (let j = 0; j < m; j++) {
+      const s = src[j], dx = x - s.cx, dz = z - s.cz, r = Math.max(0.3, Math.hypot(dx, dz)), k = p * m + j;
+      R[k] = r; CS[k] = (dx * s.ux + dz * s.uz) / r; SN[k] = (dz * s.ux - dx * s.uz) / r;
+      G[k] = blocked(s.cx, s.cz, x, z) ? OCC_GAIN : 1;
+    }
+  }
+  return { n, m, R, CS, SN, G };
+}
+
+// sum the elements for each frequency; returns mean |p|^2 over freqs, and the complex field for the last one
+function solveField(src, g, freqs, wantComplex) {
+  const { n, m, R, CS, SN, G } = g;
+  const P = new Float32Array(n), RE = wantComplex ? new Float32Array(n) : null, IM = wantComplex ? new Float32Array(n) : null;
+  const D = new Float32Array(m);
+  for (const f of freqs) {
+    const k = (2 * Math.PI * f) / C0;
+    for (let p = 0; p < n; p++) {
+      let re = 0, im = 0;
+      for (let j = 0; j < m; j++) {
+        const q = p * m + j, r = R[q];
+        const amp = (dirOf(src[j], f, CS[q], SN[q]) * G[q]) / r, ph = -k * r;
+        re += amp * Math.cos(ph); im += amp * Math.sin(ph);
+      }
+      P[p] += (re * re + im * im) / freqs.length;
+      if (wantComplex) { RE[p] = re; IM[p] = im; }
+    }
+  }
+  return { P, RE, IM };
+}
+
+// broadband view: level of each 1/3-octave band (3 lines, energy-averaged), then the mean of the band levels in dB,
+// so a missing HF band counts as much as a missing LF band (an energy sum would be dominated by the loudest band)
+function solveBands(src, g, bands) {
+  const out = new Float32Array(g.n);
+  for (const fc of bands) {
+    const { P } = solveField(src, g, [-1, 0, 1].map((d) => fc * Math.pow(2, d / 9)), false);
+    for (let p = 0; p < g.n; p++) out[p] += (10 * Math.log10(P[p] + 1e-20)) / bands.length;
+  }
+  return out;
+}
+const BANDS = [];
+for (let b = -9; b <= 9; b++) BANDS.push(1000 * Math.pow(2, b / 3)); // 125 Hz .. 8 kHz
+
+// 1/3-octave pink: equal energy per band, 3 lines per band to smooth single-frequency combing
+const THIRDS = [63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000];
+function pinkFreqs() {
+  const out = [];
+  for (let b = -9; b <= 9; b++) { const fc = 1000 * Math.pow(2, b / 3); for (const d of [-1, 0, 1]) out.push(fc * Math.pow(2, d / 9)); }
+  return out;
+}
+
+// audience lines: floor (seated ears) and balcony (raked)
+function audiencePts(step) {
+  const floor = [], bal = [];
+  for (let x = 2; x <= 30.001; x += step) floor.push(x, HALL.ear);
+  for (let x = HALL.balX + 0.8; x <= 30.5001; x += step) bal.push(x, balFloor(x) + HALL.ear);
+  return { floor, bal };
+}
+
+const PRE = {"trim":10.5,"J":{"4":{"site":1,"sp":[12,14,14]},"5":{"site":2,"sp":[6,14,14,14]},"6":{"site":1,"sp":[2,8,14,14,14]},"7":{"site":1,"sp":[2,3,12,14,14,14]},"8":{"site":1,"sp":[1,2,6,10,13,14,14]},"9":{"site":0,"sp":[0,1,2,7,11,11,14,14]},"10":{"site":0,"sp":[0,1,2,4,8,9,9,14,14]},"11":{"site":0,"sp":[0,1,1,3,7,7,7,10,14,14]},"12":{"site":0,"sp":[0,0,1,3,4,6,6,6,9,14,14]},"13":{"site":0,"sp":[0,0,0,2,3,5,5,5,5,9,14,14]},"14":{"site":1,"sp":[0,0,1,1,1,4,5,5,5,5,8,14,14]},"15":{"site":0,"sp":[0,0,0,1,2,2,4,4,4,4,4,8,14,14]},"16":{"site":1,"sp":[0,0,0,1,1,1,3,4,4,4,4,4,8,14,14]}},"psAim":-21};
+(() => {
+const $ = (id) => document.getElementById(id);
+const st = { sys: "la", mode: "pink", fi: 12, n: 12, trim: PRE.trim, site: PRE.J[12].site, psAim: PRE.psAim,
+  sp: PRE.J[12].sp.slice(), preset: "J", rays: true, hl: -1, pin: -1, waves: false, deck: "floor", lx: 14 };
+const W = 1600, H = 690, X0 = HALL.x0, X1 = HALL.x1, Z0 = HALL.z0, Z1 = HALL.z1;
+const sx = (x) => ((x - X0) / (X1 - X0)) * W, sy = (z) => ((Z1 - z) / (Z1 - Z0)) * H;
+const STOPS = [[-24, [16, 12, 30]], [-18, [52, 22, 96]], [-12, [120, 30, 128]], [-6, [214, 52, 120]], [-2, [255, 92, 96]], [0, [255, 140, 52]], [3, [255, 206, 70]], [6, [255, 246, 200]]];
+function cmap(v) {
+  if (v <= STOPS[0][0]) return STOPS[0][1];
+  for (let i = 1; i < STOPS.length; i++) if (v <= STOPS[i][0]) {
+    const [a, ca] = STOPS[i - 1], [b, cb] = STOPS[i], t = (v - a) / (b - a);
+    return ca.map((c, k) => c + (cb[k] - c) * t);
+  }
+  return STOPS[STOPS.length - 1][1];
+}
+const solid = (x, z) => x > HALL.rear || z < 0 || z > HALL.ceil || (x < HALL.stageX && z < HALL.stageH) ||
+  (x >= HALL.balX && z >= HALL.balUnder && z <= balFloor(x)) || (x >= HALL.balX && x <= HALL.balX + 0.15 && z >= HALL.balUnder && z <= HALL.balTop + 1);
+const fmtF = (f) => (f >= 1000 ? (f / 1000).toFixed(f % 1000 ? 1 : 0).replace(/\.0$/, "") + " kHz" : f + " Hz");
+const sgn = (v) => { const r = Math.round(v * 10) / 10; return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1); };
+
+// ---------- computation ----------
+const cache = {};
+function src() { return st.sys === "la" ? arrayGeom(st.n, st.sp, st.trim, st.site) : psGeom(st.trim, st.psAim); }
+function key() { return st.sys === "la" ? `la${st.n}|${st.sp.join(",")}|${st.trim}|${st.site}` : `ps|${st.trim}|${st.psAim}`; }
+function grid(res) {
+  const nx = Math.round((X1 - X0) / res), nz = Math.round((Z1 - Z0) / res), pts = new Float32Array(nx * nz * 2), mask = new Uint8Array(nx * nz);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x = X0 + (i + 0.5) * res, z = Z1 - (j + 0.5) * res, p = j * nx + i;
+    pts[2 * p] = x; pts[2 * p + 1] = z; mask[p] = solid(x, z) ? 0 : 1;
+  }
+  return { nx, nz, pts, mask };
+}
+const GRID = { pink: grid(0.22), tone: grid(0.14), wave: grid(0.08), pinkQ: grid(0.45), toneQ: grid(0.3) };
+const AUD = audiencePts(0.25);
+const geoms = {};
+function geo(name, pts, s, k) { const id = name + "|" + k; if (!geoms[id]) { for (const q in geoms) if (q.startsWith(name + "|")) delete geoms[q]; geoms[id] = geomFor(s, pts); } return geoms[id]; }
+function levels(s, g) { // dB, per the current mode
+  if (st.mode === "pink") return solveBands(s, g, BANDS);
+  const f = THIRDS[st.fi], { P } = solveField(s, g, [-1, 0, 1].map((d) => f * Math.pow(2, d / 9)), false);
+  return P.map((p) => 10 * Math.log10(p + 1e-20));
+}
+let R = null;
+function compute(quick) {
+  const s = src(), k = key();
+  const foh = geo("foh", HALL.foh, s, k);
+  const ref = levels(s, foh)[0];
+  const gname = st.mode + (quick ? "Q" : ""), G = GRID[gname];
+  const heat = levels(s, geo("heat" + gname, G.pts, s, k)).map((v) => v - ref);
+  const fl = levels(s, geo("floor", AUD.floor, s, k)).map((v) => v - ref);
+  const bl = levels(s, geo("bal", AUD.bal, s, k)).map((v) => v - ref);
+  // coupling gain at FOH: whole array vs the strongest single element
+  let cg = 0;
+  if (s.length > 1) {
+    const one = s.map((e) => levels([e], geomFor([e], HALL.foh))[0]);
+    cg = ref - Math.max(...one);
+  }
+  // listener + FOH frequency response, 1/6 octave
+  const lp = lisPt();
+  const fr = [], frf = [];
+  const gl = geomFor(s, lp), gf = foh;
+  for (let b = -24; b <= 24; b++) {
+    const fc = 1000 * Math.pow(2, b / 6), fs = [-1, 0, 1].map((d) => fc * Math.pow(2, d / 18));
+    fr.push([fc, 10 * Math.log10(solveField(s, gl, fs, false).P[0] + 1e-20)]);
+    frf.push([fc, 10 * Math.log10(solveField(s, gf, fs, false).P[0] + 1e-20)]);
+  }
+  const lisDb = levels(s, gl)[0] - ref;
+  // wave field (complex) for the animation
+  let wave = null;
+  if (st.waves && st.mode === "tone" && THIRDS[st.fi] <= 1000) {
+    const f = THIRDS[st.fi], g = geo("wave", GRID.wave.pts, s, k);
+    const { P, RE, IM } = solveField(s, g, [f], true);
+    const refw = solveField(s, foh, [f], false).P[0];
+    const ph = new Float32Array(P.length), al = new Float32Array(P.length);
+    for (let i = 0; i < P.length; i++) { ph[i] = Math.atan2(IM[i], RE[i]); const d = 10 * Math.log10(P[i] / refw + 1e-20); al[i] = Math.max(0, Math.min(1, (d + 24) / 30)); }
+    wave = { ph, al };
+  }
+  R = { s, heat, G, fl, bl, cg, fr, frf, ref, lisDb, wave };
+}
+function lisPt() {
+  if (st.deck === "bal") { const x = Math.min(30.5, Math.max((HALL.balX + 0.8), st.lx)); return [x, balFloor(x) + HALL.ear]; }
+  return [Math.min(30, Math.max(2, st.lx)), HALL.ear];
+}
+
+// ---------- drawing: hall ----------
+const cv = $("hall"), cx = cv.getContext("2d");
+const off = document.createElement("canvas"), ox = off.getContext("2d");
+function paintHeat() {
+  const { G, heat } = R;
+  off.width = G.nx; off.height = G.nz;
+  const img = ox.createImageData(G.nx, G.nz);
+  for (let p = 0; p < heat.length; p++) {
+    const c = cmap(heat[p]), q = p * 4;
+    img.data[q] = c[0]; img.data[q + 1] = c[1]; img.data[q + 2] = c[2]; img.data[q + 3] = G.mask[p] ? 165 : 0;
+  }
+  ox.putImageData(img, 0, 0);
+}
+const woff = document.createElement("canvas"), wx = woff.getContext("2d");
+let wimg = null;
+function paintWave(t) {
+  const G = GRID.wave, { ph, al } = R.wave;
+  if (woff.width !== G.nx) { woff.width = G.nx; woff.height = G.nz; wimg = wx.createImageData(G.nx, G.nz); }
+  const d = wimg.data;
+  for (let p = 0; p < ph.length; p++) {
+    const v = Math.cos(ph[p] + t), a = al[p], q = p * 4;
+    if (!G.mask[p]) { d[q + 3] = 0; continue; }
+    if (v >= 0) { d[q] = 18 + 237 * v * a; d[q + 1] = 14 + 65 * v * a; d[q + 2] = 26 + 134 * v * a; }
+    else { d[q] = 18; d[q + 1] = 14 + 60 * -v * a; d[q + 2] = 26 + 120 * -v * a; }
+    d[q + 3] = 255;
+  }
+  wx.putImageData(wimg, 0, 0);
+}
+function line(pts, col, w, dash) {
+  cx.beginPath(); pts.forEach(([x, z], i) => (i ? cx.lineTo(sx(x), sy(z)) : cx.moveTo(sx(x), sy(z))));
+  cx.strokeStyle = col; cx.lineWidth = w; cx.setLineDash(dash || []); cx.stroke(); cx.setLineDash([]);
+}
+// where each element's on-axis line lands: the listening plane (seated ear height) or the first surface in the way
+// near/far-field transition of a straight line of height H (Heil et al. 1992, as quoted by M. van Veen):
+// d = 1.5·F·H²·√(1 − 1/(3FH)²), F in kHz, H in m. No line-source behaviour at all when 3FH ≤ 1.
+function transInfo() {
+  if (st.sys !== "la") return null;
+  const H = st.n * BOX_H, f = st.mode === "pink" ? 1000 : THIRDS[st.fi], F = f / 1000, x = 3 * F * H;
+  return { H, f, d: x <= 1 ? 0 : 1.5 * F * H * H * Math.sqrt(1 - 1 / (x * x)), fmin: 1000 / (3 * H) };
+}
+function drawTrans() {
+  const T = transInfo(); if (!T || T.d <= 0) return;
+  const c = R.s.reduce((a, e) => [a[0] + e.cx / R.s.length, a[1] + e.cz / R.s.length], [0, 0]);
+  const rpx = (T.d / (X1 - X0)) * W;
+  cx.save(); cx.beginPath(); cx.rect(sx(0), sy(HALL.ceil), sx(HALL.rear) - sx(0), sy(0) - sy(HALL.ceil)); cx.clip();
+  cx.beginPath(); cx.arc(sx(c[0]), sy(c[1]), rpx, -Math.PI / 2, Math.PI / 2); cx.strokeStyle = "#4fd8ff"; cx.lineWidth = 2.5; cx.setLineDash([10, 7]); cx.stroke(); cx.setLineDash([]);
+  cx.restore();
+  const lbl = `\u2066${fmtF(T.f)}\u2069 · מעבר לשדה רחוק \u2066${T.d.toFixed(1)} m\u2069`;
+  cx.font = "600 17px Assistant, sans-serif"; const tw = cx.measureText(lbl).width + 14;
+  let X, Y;
+  if (c[0] + T.d < HALL.rear - 0.5) { X = sx(c[0] + T.d) - tw / 2; Y = sy(c[1]) - 14; }
+  else { X = sx(HALL.rear) - tw - 8; Y = sy(HALL.ceil) + 10; }
+  X = Math.min(W - tw - 4, Math.max(4, X));
+  cx.fillStyle = "rgba(12,11,17,.88)"; cx.fillRect(X, Y, tw, 26); cx.fillStyle = "#4fd8ff"; cx.direction = "rtl"; cx.textAlign = "right"; cx.fillText(lbl, X + tw - 7, Y + 19); cx.direction = "ltr"; cx.textAlign = "left";
+}
+function aimHit(e) {
+  const b0 = HALL.balX + 0.8;
+  const segs = [
+    [2, HALL.ear, 30, HALL.ear, "floor"], [b0, balFloor(b0) + HALL.ear, 30.5, balFloor(30.5) + HALL.ear, "bal"],
+    [X0, 0, HALL.rear, 0, "front"], [X0, HALL.stageH, 0, HALL.stageH, "stage"],
+    [HALL.rear, 0, HALL.rear, HALL.ceil, "wall"], [X0, HALL.ceil, HALL.rear, HALL.ceil, "ceil"],
+    [...OCC[0], "under"], [...OCC[1], "face"], [...OCC[2], "balfloor"],
+  ];
+  let best = { t: 80, kind: "none" };
+  for (const [ax, az, bx, bz, kind] of segs) {
+    const rx = e.ux, rz = e.uz, qx = bx - ax, qz = bz - az, den = rx * qz - rz * qx;
+    if (Math.abs(den) < 1e-9) continue;
+    const t = ((ax - e.cx) * qz - (az - e.cz) * qx) / den, u = ((ax - e.cx) * rz - (az - e.cz) * rx) / den;
+    if (t > 0.05 && u >= 0 && u <= 1 && t < best.t) best = { t, kind };
+  }
+  const z = e.cz + e.uz * best.t;
+  if (best.kind === "wall" && z <= balFloor(HALL.rear) + HALL.ear + 1.5) best.kind = "lastrow";
+  return { ...best, x: e.cx + e.ux * best.t, z };
+}
+const HIT_TXT = { floor: "רצפה", bal: "יציע", front: "לפני השורה הראשונה", stage: "הבמה", wall: "הקיר האחורי, מעל הקהל", lastrow: "הקיר האחורי, ממש מעל השורה האחרונה", ceil: "התקרה",
+  under: "תחתית היציע", face: "חזית היציע", balfloor: "רצפת היציע", none: "—" };
+const boxCol = (i, n) => { const t = n > 1 ? i / (n - 1) : 0, a = [255, 79, 160], b = [255, 154, 61], c = [255, 230, 90];
+  const m = t < 0.5 ? a.map((v, k) => v + (b[k] - v) * t * 2) : b.map((v, k) => v + (c[k] - v) * (t - 0.5) * 2); return `rgb(${m.map(Math.round)})`; };
+function drawAims() {
+  const n = R.s.length, hits = R.s.map(aimHit), placed = [];
+  hits.forEach((h, i) => { const e = R.s[i], on = st.hl === i;
+    line([[e.cx, e.cz], [h.x, h.z]], on ? "#ffffff" : boxCol(i, n), on ? 3.2 : 1.5, ["floor", "bal", "lastrow"].includes(h.kind) ? [] : [7, 6]); });
+  // numbered impact markers; a label that would overlap one already drawn is nudged up, then dropped to a dot
+  hits.forEach((h, i) => {
+    let X = sx(h.x), Y = sy(h.z);
+    const inAud = h.kind === "floor" || h.kind === "bal" || h.kind === "lastrow";
+    cx.beginPath(); cx.arc(X, Y, 4, 0, 7); cx.fillStyle = boxCol(i, n); cx.fill();
+    let ly = Y - 22, ok = false;
+    for (let k = 0; k < 4 && !ok; k++) { ok = placed.every(([px, py]) => Math.abs(px - X) > 24 || Math.abs(py - ly) > 22); if (!ok) ly -= 22; }
+    if (!ok && st.hl !== i) return;
+    placed.push([X, ly]);
+    if (ly < Y - 26) line([[h.x, h.z], [X0 + (X / W) * (X1 - X0), Z1 - ((ly + 10) / H) * (Z1 - Z0)]], "rgba(244,241,255,.5)", 1);
+    cx.beginPath(); cx.arc(X, ly, 11, 0, 7); cx.fillStyle = st.hl === i ? "#ffffff" : "#0c0b11"; cx.fill();
+    cx.lineWidth = 2; cx.strokeStyle = inAud ? boxCol(i, n) : "#8f8aa3"; cx.stroke();
+    cx.fillStyle = st.hl === i ? "#0c0b11" : "#f4f1ff"; cx.font = "600 14px IBM Plex Mono, monospace"; cx.textAlign = "center"; cx.fillText(String(i + 1), X, ly + 5);
+  });
+  if (st.hl >= 0 && st.hl < n) {
+    const h = hits[st.hl], txt = `תיבה ${st.hl + 1} · זריקה \u2066${h.t.toFixed(1)} m\u2069`;
+    cx.font = "600 18px Assistant, sans-serif"; const tw = cx.measureText(txt).width + 16;
+    const e = R.s[st.hl], mx = (sx(e.cx) + sx(h.x)) / 2, my = (sy(e.cz) + sy(h.z)) / 2;
+    const X = Math.min(W - tw - 4, Math.max(4, mx - tw / 2)), Y = Math.max(4, my - 40);
+    cx.fillStyle = "rgba(12,11,17,.9)"; cx.fillRect(X, Y, tw, 28); cx.fillStyle = "#ffffff"; cx.textAlign = "left"; cx.direction = "rtl"; cx.textAlign = "right"; cx.fillText(txt, X + tw - 8, Y + 20); cx.direction = "ltr";
+  }
+  return hits;
+}
+// d&b Y-Series Rigging manual 1.6: Y8/Y12 20 kg, Y Flying frame 19 kg, SWL 540 kg (max 24 TOP);
+// up to 10 TOP / 220 kg total in any splay configuration without a load calculation, everything else checked in ArrayCalc
+const RIG = { box: 20, frame: 19, swl: 540, maxTop: 24, freeN: 10, freeKg: 220 };
+function rigState() {
+  if (st.sys !== "la") return { level: "na" };
+  const total = st.n * RIG.box + RIG.frame;
+  const free = st.n <= RIG.freeN && total <= RIG.freeKg, over = total > RIG.swl || st.n > RIG.maxTop;
+  return { total, level: over ? "stop" : free ? "ok" : "warn" };
+}
+function rigPanel() {
+  const RG = rigState(), s = $("rigStatus"), l = $("rigList");
+  if (RG.level === "na") {
+    s.className = "rig-status na"; s.textContent = "Point source: מגבלות התלייה תלויות ברמקול ובאביזרי התלייה שלו, ולא מחושבות כאן.";
+    l.innerHTML = ""; return;
+  }
+  s.className = "rig-status " + RG.level;
+  s.textContent = RG.level === "ok" ? `בגבולות שהיצרן מאשר בלי חישוב עומסים: עד ${RIG.freeN} תיבות ועד ${RIG.freeKg} kg, בכל תצורת זוויות.`
+    : RG.level === "warn" ? `יותר מ-${RIG.freeN} תיבות: לפי היצרן חובה לבדוק את העומסים ב-ArrayCalc לפני שתולים מערך כזה.`
+    : "חורג מהעומס המותר של ה-flying frame. אסור לתלות.";
+  const pct = Math.round((RG.total / RIG.swl) * 100);
+  l.innerHTML = `
+    <dt>משקל המערך</dt><dd><span class="ltr">${st.n} × ${RIG.box} kg + ${RIG.frame} kg (flying frame) = <b>${RG.total} kg</b></span></dd>
+    <dt>עומס על ה-flying frame</dt><dd><b class="ltr">${RG.total} / ${RIG.swl} kg</b> (${pct}%) · עד ${RIG.maxTop} תיבות במערך</dd>
+    <dt>זוויות בין תיבות</dt><dd><span class="ltr">0°–14°</span> בצעדים של <span class="ltr">1°</span>. ההדמיה לא מאפשרת ערך מחוץ לטווח.</dd>
+    <dt>כיוון המערך (site)</dt><dd>בנקודת תלייה אחת: לפי החור ב-load adapter שנבחר ב-ArrayCalc. בשתי נקודות: לפי כיוון המנועים. בשני המקרים בודקים את הזווית במד שיפוע אחרי ההרמה.</dd>
+    <dt>אבטחה משנית</dt><dd>נפרדת מנקודות התלייה ומסוגלת לשאת את כל משקל המערך. שרשרת אבטחה בזווית של עד <span class="ltr">60°</span>.</dd>`;
+}
+function aimTable() {
+  const tb = $("aimT").tBodies[0], n = R.s.length, hits = R.s.map(aimHit);
+  tb.innerHTML = hits.map((h, i) => {
+    const e = R.s[i], tilt = Math.round((e.a * 180) / Math.PI), inAud = ["floor", "bal", "lastrow"].includes(h.kind);
+    const where = h.kind === "floor" || h.kind === "bal" ? `${HIT_TXT[h.kind]}, <span class="ltr">${h.x.toFixed(1)} m</span> מהבמה` : HIT_TXT[h.kind];
+    const sp = st.sys === "la" && i > 0 ? st.sp[i - 1] + "°" : "—";
+    return `<tr data-i="${i}" class="${st.pin === i ? "hl" : ""}${inAud ? "" : " miss"}"><td><i style="background:${boxCol(i, n)}"></i>${i + 1}</td><td class="num">${sp}</td><td class="num">${tilt > 0 ? "+" : tilt < 0 ? "−" : ""}${Math.abs(tilt)}°</td><td class="num">${h.t.toFixed(1)} m</td><td>${where}</td></tr>`;
+  }).join("");
+}
+function drawHall(t) {
+  cx.fillStyle = "#121019"; cx.fillRect(0, 0, W, H);
+  cx.imageSmoothingEnabled = true;
+  if (R.wave) { paintWave(t); cx.drawImage(woff, 0, 0, W, H); } else cx.drawImage(off, 0, 0, W, H);
+  // solids
+  cx.fillStyle = "#1d1a27";
+  const poly = (ps) => { cx.beginPath(); ps.forEach(([x, z], i) => (i ? cx.lineTo(sx(x), sy(z)) : cx.moveTo(sx(x), sy(z)))); cx.closePath(); cx.fill(); };
+  poly([[X0, 0], [0, 0], [0, HALL.stageH], [X0, HALL.stageH]]);
+  poly([[HALL.balX, HALL.balUnder], [HALL.rear, HALL.balUnder], [HALL.rear, balFloor(HALL.rear)], [HALL.balX + 0.15, HALL.balTop], [HALL.balX + 0.15, HALL.balTop + 1], [HALL.balX, HALL.balTop + 1]]);
+  poly([[X0, Z0], [X1, Z0], [X1, 0], [X0, 0]]);
+  poly([[HALL.rear, Z0], [X1, Z0], [X1, Z1], [HALL.rear, Z1]]);
+  poly([[X0, HALL.ceil], [X1, HALL.ceil], [X1, Z1], [X0, Z1]]);
+  const edge = "#8f8aa3";
+  line([[X0, HALL.stageH], [0, HALL.stageH], [0, 0], [HALL.rear, 0], [HALL.rear, HALL.ceil], [X0, HALL.ceil]], edge, 2);
+  line([[HALL.rear, HALL.balUnder], [HALL.balX, HALL.balUnder], [HALL.balX, HALL.balTop + 1], [HALL.balX + 0.15, HALL.balTop + 1], [HALL.balX + 0.15, HALL.balTop], [HALL.rear, balFloor(HALL.rear)]], edge, 2);
+  // rays
+  // audience: one dot per 0.5 m, coloured by level
+  const dots = (pts, vals) => { for (let i = 0; i < vals.length; i += 2) { const c = cmap(vals[i]); const X = sx(pts[2 * i]), Y = sy(pts[2 * i + 1]); cx.beginPath(); cx.arc(X, Y, 8, 0, 7); cx.fillStyle = "#f4f1ff"; cx.fill(); cx.beginPath(); cx.arc(X, Y, 5.5, 0, 7); cx.fillStyle = `rgb(${c.map(Math.round)})`; cx.fill(); } };
+  dots(AUD.floor, R.fl); dots(AUD.bal, R.bl);
+  if (st.rays) drawAims();
+  drawTrans();
+  // FOH desk
+  const [fx] = HALL.foh;
+  cx.fillStyle = "#3a3548"; cx.fillRect(sx(fx - 0.9), sy(1.05), sx(fx + 0.9) - sx(fx - 0.9), sy(0) - sy(1.05));
+  cx.fillStyle = "#e9e6f2"; cx.font = "600 20px IBM Plex Mono, monospace"; cx.textAlign = "center"; cx.fillText("FOH", sx(fx), sy(0) - 6);
+  // the array
+  R.s.forEach((e) => {
+    cx.beginPath(); e.poly.forEach(([x, z], i) => (i ? cx.lineTo(sx(x), sy(z)) : cx.moveTo(sx(x), sy(z)))); cx.closePath();
+    cx.fillStyle = "#0c0b11"; cx.fill(); cx.strokeStyle = "#f4f1ff"; cx.lineWidth = 1.6; cx.stroke();
+  });
+  const e0 = R.s[0], nx = -Math.sin(e0.a), nz = Math.cos(e0.a), ft = e0.poly[0], bt = e0.poly[3];
+  const fr = [[ft[0] + nx * 0.09 + e0.ux * 0.05, ft[1] + nz * 0.09 + e0.uz * 0.05], [bt[0] + nx * 0.09 - e0.ux * 0.05, bt[1] + nz * 0.09 - e0.uz * 0.05]];
+  const RG = rigState(), rc = RG.level === "ok" ? "#6dff3a" : RG.level === "warn" ? "#ffb02e" : "#8f8aa3";
+  const pick = [(fr[0][0] + fr[1][0]) / 2, (fr[0][1] + fr[1][1]) / 2];
+  line([pick, [pick[0], HALL.ceil]], "#b9b4c9", 2, [2, 3]);
+  line(fr, rc, 5);
+  if (RG.total) { cx.font = "600 17px IBM Plex Mono, monospace"; cx.textAlign = "left"; cx.fillStyle = rc; cx.fillText(`${RG.total} kg`, sx(pick[0]) + 8, sy(pick[1] + 1.2)); }
+  cx.fillStyle = "#e9e6f2"; cx.textAlign = "left"; cx.font = "600 18px IBM Plex Mono, monospace";
+  cx.fillText(st.sys === "la" ? `${st.n} × 257 mm` : "Point source 40°", sx(0.9), sy(HALL.ceil - 0.6));
+  cx.fillStyle = "#b9b4c9"; cx.font = "16px IBM Plex Mono, monospace";
+  cx.fillText(`trim ${st.trim.toFixed(1)} m`, sx(0.9), sy(HALL.ceil - 1.2));
+  // scale bar
+  line([[1, -0.25], [6, -0.25]], "#b9b4c9", 2);
+  cx.fillStyle = "#b9b4c9"; cx.textAlign = "center"; cx.fillText("5 m", sx(3.5), sy(-0.25) - 6);
+  // listener
+  const [lx, lz] = lisPt(), c = cmap(R.lisDb);
+  cx.beginPath(); cx.arc(sx(lx), sy(lz), 11, 0, 7); cx.fillStyle = `rgb(${c.map(Math.round)})`; cx.fill(); cx.lineWidth = 3; cx.strokeStyle = "#ffffff"; cx.stroke();
+  const label = `${sgn(R.lisDb)} dB`; cx.font = "600 20px IBM Plex Mono, monospace";
+  const tw = cx.measureText(label).width + 14, lxp = Math.min(W - tw - 4, Math.max(4, sx(lx) - tw / 2)), lyp = sy(lz) - (st.rays ? 74 : 44);
+  cx.fillStyle = "rgba(12,11,17,.85)"; cx.fillRect(lxp, lyp, tw, 28); cx.fillStyle = "#ffffff"; cx.textAlign = "left"; cx.fillText(label, lxp + 7, lyp + 20);
+}
+
+// ---------- graphs ----------
+function axes(c, w, h, m, xl, yl) {
+  c.fillStyle = "#121019"; c.fillRect(0, 0, w, h);
+  c.font = "13px IBM Plex Mono, monospace"; c.fillStyle = "#b9b4c9"; c.strokeStyle = "#2b2737"; c.lineWidth = 1;
+}
+function drawDist() {
+  const c = $("gDist").getContext("2d"), w = 760, h = 360, m = { l: 54, r: 14, t: 14, b: 40 };
+  axes(c, w, h);
+  const dmin = 4, dmax = 40, ymin = -24, ymax = 12;
+  const gx = (d) => m.l + (Math.log(d / dmin) / Math.log(dmax / dmin)) * (w - m.l - m.r), gy = (v) => m.t + ((ymax - v) / (ymax - ymin)) * (h - m.t - m.b);
+  c.textAlign = "center";
+  for (const d of [4, 5, 7, 10, 15, 20, 30, 40]) { c.beginPath(); c.moveTo(gx(d), m.t); c.lineTo(gx(d), h - m.b); c.stroke(); c.fillText(d + "", gx(d), h - m.b + 16); }
+  c.fillText("מרחק מהמערך (m, סקאלה לוגריתמית)", (m.l + w - m.r) / 2, h - 6);
+  c.textAlign = "right";
+  for (let v = ymin; v <= ymax; v += 6) { c.beginPath(); c.moveTo(m.l, gy(v)); c.lineTo(w - m.r, gy(v)); c.stroke(); c.fillText((v > 0 ? "+" : "") + v, m.l - 6, gy(v) + 4); }
+  c.save(); c.translate(14, (m.t + h - m.b) / 2); c.rotate(-Math.PI / 2); c.textAlign = "center"; c.fillText("dB ביחס ל-FOH", 0, 0); c.restore();
+  const ac = R.s.reduce((a, e) => [a[0] + e.cx / R.s.length, a[1] + e.cz / R.s.length], [0, 0]);
+  const dist = (x, z) => Math.hypot(x - ac[0], z - ac[1]);
+  const rf = dist(...HALL.foh);
+  c.save(); c.beginPath(); c.rect(m.l, m.t, w - m.l - m.r, h - m.t - m.b); c.clip();
+  const ref = (k, col) => { c.beginPath(); c.moveTo(gx(dmin), gy(-k * Math.log10(dmin / rf))); c.lineTo(gx(dmax), gy(-k * Math.log10(dmax / rf))); c.strokeStyle = col; c.lineWidth = 1.6; c.setLineDash([7, 6]); c.stroke(); c.setLineDash([]); };
+  ref(20, "#8f8aa3"); ref(10, "#6dff3a");
+  const T = transInfo();
+  if (T && T.d > dmin && T.d < dmax) { c.beginPath(); c.moveTo(gx(T.d), m.t); c.lineTo(gx(T.d), h - m.b); c.strokeStyle = "#4fd8ff"; c.lineWidth = 2; c.setLineDash([4, 4]); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#4fd8ff"; c.font = "13px IBM Plex Mono, monospace"; c.textAlign = "left"; c.fillText("near → far", gx(T.d) + 5, m.t + 14); }
+  const curve = (pts, vals, col) => { c.beginPath(); for (let i = 0; i < vals.length; i++) { const d = dist(pts[2 * i], pts[2 * i + 1]); i ? c.lineTo(gx(d), gy(vals[i])) : c.moveTo(gx(d), gy(vals[i])); } c.strokeStyle = col; c.lineWidth = 2.6; c.stroke(); };
+  curve(AUD.floor, R.fl, "#ff4fa0"); curve(AUD.bal, R.bl, "#ff9a3d");
+  const lp = lisPt(); c.beginPath(); c.arc(gx(dist(...lp)), gy(R.lisDb), 6, 0, 7); c.fillStyle = "#ffffff"; c.fill();
+  c.beginPath(); c.arc(gx(rf), gy(0), 4, 0, 7); c.fillStyle = "#8f8aa3"; c.fill();
+  c.restore();
+}
+function drawFreq() {
+  const c = $("gFreq").getContext("2d"), w = 760, h = 360, m = { l: 54, r: 14, t: 14, b: 40 };
+  axes(c, w, h);
+  const fmin = 63, fmax = 16000, ymin = -30, ymax = 12;
+  const gx = (f) => m.l + (Math.log(f / fmin) / Math.log(fmax / fmin)) * (w - m.l - m.r), gy = (v) => m.t + ((ymax - v) / (ymax - ymin)) * (h - m.t - m.b);
+  c.textAlign = "center";
+  for (const f of [63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]) { c.beginPath(); c.moveTo(gx(f), m.t); c.lineTo(gx(f), h - m.b); c.stroke(); c.fillText(f >= 1000 ? f / 1000 + "k" : f, gx(f), h - m.b + 16); }
+  c.fillText("תדר (Hz)", (m.l + w - m.r) / 2, h - 6);
+  c.textAlign = "right";
+  for (let v = ymin; v <= ymax; v += 6) { c.beginPath(); c.moveTo(m.l, gy(v)); c.lineTo(w - m.r, gy(v)); c.stroke(); c.fillText((v > 0 ? "+" : "") + v, m.l - 6, gy(v) + 4); }
+  c.save(); c.translate(14, (m.t + h - m.b) / 2); c.rotate(-Math.PI / 2); c.textAlign = "center"; c.fillText("dB", 0, 0); c.restore();
+  // normalise both curves to FOH's mean over 125 Hz..8 kHz
+  const inB = R.frf.filter(([f]) => f >= 120 && f <= 8500), nrm = inB.reduce((a, [, v]) => a + v, 0) / inB.length;
+  c.save(); c.beginPath(); c.rect(m.l, m.t, w - m.l - m.r, h - m.t - m.b); c.clip();
+  if (st.mode === "tone") { const f = THIRDS[st.fi]; c.fillStyle = "rgba(255,154,61,.15)"; c.fillRect(gx(f / Math.pow(2, 1 / 6)), m.t, gx(f * Math.pow(2, 1 / 6)) - gx(f / Math.pow(2, 1 / 6)), h - m.t - m.b); }
+  const curve = (arr, col, lw) => { c.beginPath(); arr.forEach(([f, v], i) => (i ? c.lineTo(gx(f), gy(v - nrm)) : c.moveTo(gx(f), gy(v - nrm)))); c.strokeStyle = col; c.lineWidth = lw; c.stroke(); };
+  curve(R.frf, "#8f8aa3", 2); curve(R.fr, "#ff4fa0", 2.6);
+  c.restore();
+}
+
+// ---------- readouts ----------
+function readouts() {
+  const open = [];
+  for (let i = 0; i < R.fl.length; i++) if (AUD.floor[2 * i] <= HALL.balX) open.push(R.fl[i]);
+  open.push(...R.bl);
+  const spread = Math.max(...open) - Math.min(...open);
+  const under = []; for (let i = 0; i < R.fl.length; i++) if (AUD.floor[2 * i] > HALL.balX + 1) under.push(R.fl[i]);
+  const um = under.reduce((a, b) => a + b, 0) / under.length;
+  const set = (id, txt, cls) => { const el = $(id); el.querySelector("b").textContent = txt; el.className = "chip " + (cls || ""); };
+  set("cSpread", spread.toFixed(1) + " dB", spread <= 6 ? "good" : spread > 12 ? "bad" : "");
+  set("cUnder", sgn(um) + " dB", um < -6 ? "bad" : "");
+  set("cCouple", R.s.length > 1 ? "+" + R.cg.toFixed(1) + " dB" : "—");
+  if (st.sys === "la") {
+    const L = st.n * BOX_H, f72 = C0 / L;
+    set("cLen", L.toFixed(2) + " m");
+    $("cLenTxt").textContent = `אורך המערך. ב-${Math.round(f72)} Hz אורך הגל שווה לאורכו: מתחת לתדר הזה הוא רחב, מעליו הוא צר יותר`;
+  } else { set("cLen", "—"); $("cLenTxt").textContent = "אורך המערך (רלוונטי ל-line array)"; }
+  const T = transInfo();
+  if (!T) { set("cTrans", "—"); $("cTransTxt").textContent = "מרחק המעבר לשדה רחוק (רלוונטי ל-line array)"; }
+  else if (T.d <= 0) { set("cTrans", "אין"); $("cTransTxt").innerHTML = `ב-<span class="ltr">${fmtF(T.f)}</span> המערך קצר מדי להתנהגות line source (מתחת ל-<span class="ltr">${Math.round(T.fmin)} Hz</span>). הוא מתנהג כ-point source.`; }
+  else { set("cTrans", T.d.toFixed(1) + " m"); $("cTransTxt").innerHTML = `מרחק המעבר לשדה רחוק ב-<span class="ltr">${fmtF(T.f)}</span>${st.mode === "pink" ? " (בחרו פס תדר בודד כדי לשנות)" : ""}. לפי אורך המערך כאילו הוא ישר. Heil et al., דרך van Veen`; }
+  const [lx, lz] = lisPt();
+  $("lisO").textContent = sgn(R.lisDb) + " dB";
+  $("lisxO").textContent = lx.toFixed(1) + " m";
+  $("modeNote").innerHTML = st.mode === "pink" ? 'Pink: ממוצע הפסים <span class="ltr">125 Hz–8 kHz</span>' : `פס 1/3 אוקטבה סביב <span class="ltr">${fmtF(THIRDS[st.fi])}</span>` + (st.waves && !R.wave ? ' · גלים מוצגים רק עד <span class="ltr">1 kHz</span>' : "");
+}
+
+// ---------- UI ----------
+function syncUI() {
+  $("sysLA").setAttribute("aria-pressed", st.sys === "la"); $("sysPS").setAttribute("aria-pressed", st.sys === "ps");
+  $("modePink").setAttribute("aria-pressed", st.mode === "pink"); $("modeTone").setAttribute("aria-pressed", st.mode === "tone");
+  $("n").value = st.n; $("nO").textContent = st.n; $("n").disabled = st.sys === "ps";
+  $("trim").value = st.trim; $("trimO").textContent = st.trim.toFixed(1) + " m";
+  const sv = st.sys === "la" ? st.site : st.psAim;
+  $("site").value = sv; $("siteO").textContent = (sv > 0 ? "+" : "") + sv + "°";
+  $("siteL").textContent = st.sys === "la" ? "זווית התיבה העליונה (site)" : "זווית הרמקול";
+  $("freq").value = st.fi; $("freqO").textContent = fmtF(THIRDS[st.fi]); $("freq").disabled = st.mode === "pink";
+  $("deck").value = st.deck; $("lisx").min = st.deck === "bal" ? HALL.balX + 0.8 : 2; $("lisx").max = st.deck === "bal" ? 30.5 : 30; $("lisx").value = st.lx;
+  $("rays").checked = st.rays; $("waves").checked = st.waves;
+  ["pStraight", "pArc", "pJ", "pAuto"].forEach((id) => $(id).classList.toggle("on", st.sys === "la" && st.preset === { pStraight: "straight", pArc: "arc", pJ: "J", pAuto: "auto" }[id]));
+  $("pAuto").disabled = st.sys !== "la" || autoBusy;
+  const box = $("splays"); box.innerHTML = "";
+  if (st.sys === "la") st.sp.forEach((v, i) => {
+    const d = document.createElement("div"); d.className = "sp";
+    d.innerHTML = `<span>${i + 1}–${i + 2}</span><button aria-label="הקטן זווית ${i + 1}-${i + 2}" data-i="${i}" data-d="-1">−</button><b>${v}°</b><button aria-label="הגדל זווית ${i + 1}-${i + 2}" data-i="${i}" data-d="1">+</button>`;
+    box.appendChild(d);
+  });
+  else box.innerHTML = '<p class="note" dir="rtl">ב-Point source יש רמקול אחד, ולכן אין זוויות בין תיבות.</p>';
+  document.querySelectorAll(".scene").forEach((el) => el.classList.toggle("active", el.dataset.scene === st.scene));
+}
+function applyPreset(p) {
+  st.preset = p;
+  if (p === "straight") { st.sp = Array(st.n - 1).fill(0); st.site = -4; }
+  if (p === "arc") { st.sp = Array(st.n - 1).fill(4); st.site = 2; }
+  if (p === "J") { st.sp = PRE.J[st.n].sp.slice(); st.site = PRE.J[st.n].site; st.trim = PRE.trim; }
+}
+let pending = false, fine = 0, t0 = performance.now();
+function render(quick) { compute(quick); paintHeat(); syncUI(); readouts(); aimTable(); rigPanel(); drawHall((performance.now() - t0) / 1000 * 2 * Math.PI * 0.8); drawDist(); drawFreq(); }
+// quick coarse map while a control moves, the fine map once it rests
+function update(scene) {
+  if (scene !== true) st.scene = null;
+  clearTimeout(fine); fine = setTimeout(() => render(false), 260);
+  if (pending) return; pending = true;
+  requestAnimationFrame(() => { pending = false; render(true); });
+}
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+(function loop() { if (R && R.wave && !reduce.matches) drawHall((performance.now() - t0) / 1000 * 2 * Math.PI * 0.8); requestAnimationFrame(loop); })();
+
+$("sysLA").onclick = () => { st.sys = "la"; update(); };
+$("sysPS").onclick = () => { st.sys = "ps"; update(); };
+$("modePink").onclick = () => { st.mode = "pink"; update(); };
+$("modeTone").onclick = () => { st.mode = "tone"; update(); };
+$("aimT").addEventListener("mouseover", (e) => { const tr = e.target.closest("tr[data-i]"); if (!tr) return; st.hl = +tr.dataset.i; if (!st.rays) { st.rays = true; $("rays").checked = true; } drawHall((performance.now() - t0) / 1000 * 2 * Math.PI * 0.8); });
+$("aimT").addEventListener("mouseleave", () => { st.hl = st.pin; drawHall((performance.now() - t0) / 1000 * 2 * Math.PI * 0.8); });
+$("aimT").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-i]"); if (!tr) return; const i = +tr.dataset.i; st.pin = st.pin === i ? -1 : i; st.hl = i; aimTable(); drawHall((performance.now() - t0) / 1000 * 2 * Math.PI * 0.8); });
+$("rays").onchange = (e) => { st.rays = e.target.checked; update(); };
+$("waves").onchange = (e) => { st.waves = e.target.checked; if (st.waves && st.mode === "pink") { st.mode = "tone"; if (THIRDS[st.fi] > 1000) st.fi = THIRDS.indexOf(500); } update(); };
+$("n").oninput = (e) => { st.n = +e.target.value; if (st.preset === "custom" || st.preset === "auto") { st.preset = "custom"; const sp = st.sp.slice(0, st.n - 1); while (sp.length < st.n - 1) sp.push(sp[sp.length - 1] || 0); st.sp = sp; } else applyPreset(st.preset); update(); };
+$("trim").oninput = (e) => { st.trim = +e.target.value; if (st.preset === "J") st.preset = "custom"; update(); };
+$("site").oninput = (e) => { if (st.sys === "la") { st.site = +e.target.value; st.preset = "custom"; } else st.psAim = +e.target.value; update(); };
+$("freq").oninput = (e) => { st.fi = +e.target.value; update(); };
+$("deck").onchange = (e) => { st.deck = e.target.value; st.lx = st.deck === "bal" ? Math.max((HALL.balX + 0.8), Math.min(30.5, st.lx)) : st.lx; update(); };
+$("lisx").oninput = (e) => { st.lx = +e.target.value; update(); };
+$("pStraight").onclick = () => { applyPreset("straight"); update(); };
+$("pArc").onclick = () => { applyPreset("arc"); update(); };
+$("pJ").onclick = () => { applyPreset("J"); update(); };
+// AutoSplay: same search used for the J presets, run for the current box count and trim.
+// Goal: the smallest spread of level (mean of 1/3-octave band levels, 125 Hz–8 kHz) over the open floor and the balcony.
+// Limits: 0–14° in 1° steps, splays never decrease towards the bottom (J), site −8°…+4°.
+let autoBusy = false;
+async function autoSplay() {
+  if (autoBusy || st.sys !== "la") return;
+  autoBusy = true; const btn = $("pAuto"), n = st.n, trim = st.trim;
+  btn.disabled = true;
+  const TB = BANDS.filter((_, i) => i % 2 === 0), A = audiencePts(0.5), tgt = [];
+  for (let i = 0; i < A.floor.length; i += 2) if (A.floor[i] <= HALL.balX) tgt.push(A.floor[i], A.floor[i + 1]);
+  tgt.push(...A.bal);
+  const score = (sp, site) => { const s = arrayGeom(n, sp, trim, site), db = solveBands(s, geomFor(s, tgt), TB);
+    let m = 0; for (const v of db) m += v / db.length; let v2 = 0, lo = 1e9, hi = -1e9; for (const v of db) { v2 += (v - m) ** 2; lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    return { sd: Math.sqrt(v2 / db.length), spread: hi - lo }; };
+  const before = score(st.sp, st.site);
+  const tasks = [];
+  for (let site = -8; site <= 4; site += 1) for (let tot = 4; tot <= Math.min(80, MAX_SPLAY * (n - 1)); tot += 4) for (let p = 1; p <= 4; p += 0.5) tasks.push([site, tot, p]);
+  let best = { s: before.sd, site: st.site, sp: st.sp.slice() }, k = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 0));
+  for (const [site, tot, p] of tasks) {
+    const w = Array.from({ length: n - 1 }, (_, i) => Math.pow((i + 1) / (n - 1), p)), sw = w.reduce((a, b) => a + b, 0);
+    const sp = w.map((v) => Math.min(MAX_SPLAY, Math.round((v / sw) * tot)));
+    const s = score(sp, site).sd; if (s < best.s) best = { s, site, sp };
+    if (++k % 40 === 0) { btn.textContent = `AutoSplay… ${Math.round((k / tasks.length) * 70)}%`; await tick(); }
+  }
+  let improved = true, pass = 0;
+  while (improved && pass < 30) {
+    improved = false; pass++;
+    for (let i = -1; i < n - 1; i++) for (const d of [-1, 1]) {
+      const sp = best.sp.slice(); let site = best.site;
+      if (i < 0) { site += d; if (site < -8 || site > 4) continue; }
+      else { sp[i] += d; if (sp[i] < 0 || sp[i] > MAX_SPLAY || (i > 0 && sp[i] < sp[i - 1]) || (i < n - 2 && sp[i] > sp[i + 1])) continue; }
+      const s = score(sp, site).sd; if (s < best.s - 1e-4) { best = { s, site, sp }; improved = true; }
+    }
+    btn.textContent = `AutoSplay… ${Math.min(99, 70 + pass * 3)}%`; await tick();
+  }
+  const after = score(best.sp, best.site);
+  autoBusy = false; btn.textContent = "AutoSplay";
+  if (st.n !== n || st.trim !== trim || st.sys !== "la") { update(); return; } // settings changed while it ran
+  st.sp = best.sp; st.site = best.site; st.preset = "auto";
+  $("autoRes").innerHTML = `AutoSplay ל-<b>${n}</b> תיבות בגובה <b class="ltr">${trim.toFixed(1)} m</b>: הפרש הרמות בקהל הפתוח ירד מ-<b class="ltr">${before.spread.toFixed(1)} dB</b> ל-<b class="ltr">${after.spread.toFixed(1)} dB</b>. site <b class="ltr">${best.site > 0 ? "+" : ""}${best.site}°</b>, סך הזוויות <b class="ltr">${best.sp.reduce((a, b) => a + b, 0)}°</b>.`;
+  update();
+}
+$("pAuto").onclick = autoSplay;
+$("splays").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; const i = +b.dataset.i; st.sp[i] = Math.max(0, Math.min(MAX_SPLAY, st.sp[i] + +b.dataset.d)); st.preset = "custom"; update(); };
+cv.addEventListener("click", (e) => {
+  const r = cv.getBoundingClientRect(), x = X0 + ((e.clientX - r.left) / r.width) * (X1 - X0), z = Z1 - ((e.clientY - r.top) / r.height) * (Z1 - Z0);
+  const df = Math.abs(z - HALL.ear) + (x < 2 || x > 30 ? 9 : 0), db = x >= (HALL.balX + 0.8) && x <= 30.5 ? Math.abs(z - balFloor(x) - HALL.ear) : 99;
+  if (Math.min(df, db) > 2.5) return;
+  st.deck = db < df ? "bal" : "floor"; st.lx = Math.round(x * 4) / 4; update();
+});
+const SCENES = {
+  couple: () => { st.sys = "la"; st.n = 12; applyPreset("straight"); st.site = 0; st.trim = 7.5; st.mode = "tone"; st.fi = THIRDS.indexOf(500); st.waves = true; st.rays = true; st.deck = "floor"; st.lx = 14; },
+  j: () => { st.sys = "la"; st.n = 12; applyPreset("J"); st.mode = "pink"; st.waves = false; st.rays = true; st.deck = "bal"; st.lx = 29; },
+  freq: () => { st.sys = "la"; st.n = 12; applyPreset("J"); st.mode = "tone"; st.fi = THIRDS.indexOf(125); st.waves = false; st.rays = true; st.deck = "floor"; st.lx = 6; },
+  ps: () => { st.sys = "ps"; st.trim = PRE.trim; st.psAim = PRE.psAim; st.mode = "pink"; st.waves = false; st.rays = true; st.deck = "floor"; st.lx = 4; },
+  shadow: () => { st.sys = "la"; st.n = 12; applyPreset("J"); st.mode = "pink"; st.waves = false; st.rays = true; st.deck = "floor"; st.lx = 28; },
+};
+document.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => { SCENES[b.dataset.go](); st.scene = b.dataset.go; update(true); $("hall").scrollIntoView({ behavior: reduce.matches ? "auto" : "smooth", block: "center" }); }));
+// colour ramp
+const rc = $("ramp").getContext("2d");
+for (let i = 0; i < 220; i++) { const c = cmap(-24 + (30 * i) / 219); rc.fillStyle = `rgb(${c.map(Math.round)})`; rc.fillRect(i, 0, 1, 10); }
+
+// ---------- tilt demo: a single pickup hangs the array like a pendulum (centre of gravity under the pickup);
+// two pickups set the angle by the motor height difference. Frame dimensions and holes are illustrative.
+(() => {
+  const ts = { mode: "one", shape: "J", hole: 6, dh: 0, ang: null };
+  const N = 8, FR = { x0: -0.47, x1: 0.14, z: 0.06, th: 0.05 }, HOLES = Array.from({ length: 11 }, (_, k) => -0.42 + k * 0.025);
+  function body() {
+    const sp = ts.shape === "J" ? PRE.J[N].sp : Array(N - 1).fill(0);
+    const boxes = arrayGeom(N, sp, 0, 0).map((b) => b.poly.map(([x, z]) => [x - HALL.arrX, z]));
+    let m = 0, gx = 0, gz = 0;
+    for (const p of boxes) { const c = p.reduce((a, q) => [a[0] + q[0] / 4, a[1] + q[1] / 4], [0, 0]); gx += 20 * c[0]; gz += 20 * c[1]; m += 20; }
+    gx += 19 * (FR.x0 + FR.x1) / 2; gz += 19 * FR.z; m += 19;
+    return { boxes, cg: [gx / m, gz / m] };
+  }
+  function target(B) {
+    if (ts.mode === "two") { const L = HOLES[10] - HOLES[0]; return (-Math.asin(ts.dh / 100 / L) * 180) / Math.PI; }
+    const P = [HOLES[ts.hole], FR.z + FR.th], dx = B.cg[0] - P[0], dz = B.cg[1] - P[1];
+    return -90 - (Math.atan2(dz, dx) * 180) / Math.PI;
+  }
+  const S = 175, OX = 330, OY = 92;
+  function draw(B, ang) {
+    const pv = ts.mode === "one" ? [HOLES[ts.hole], FR.z + FR.th] : [HOLES[10], FR.z + FR.th];
+    const a = (ang * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
+    const T = ([x, z]) => { const dx = x - pv[0], dz = z - pv[1]; return [OX + (dx * ca - dz * sa) * S, OY - (dx * sa + dz * ca) * S]; };
+    const path = (pts) => "M" + pts.map((p) => T(p).map((v) => v.toFixed(1)).join(" ")).join("L") + "Z";
+    let s = `<rect x="0" y="0" width="560" height="470" fill="#121019"/>`;
+    s += `<rect x="20" y="14" width="520" height="10" fill="#3a3548"/><text x="28" y="44" fill="#8f8aa3" font-size="12" font-family="IBM Plex Mono,monospace">truss</text>`;
+    const chain = (p) => { const [x, y] = T(p); s += `<line x1="${x}" y1="24" x2="${x}" y2="${y}" stroke="#b9b4c9" stroke-width="2.5" stroke-dasharray="3 3"/><rect x="${x - 9}" y="24" width="18" height="16" rx="2" fill="#3a3548" stroke="#b9b4c9"/>`; };
+    if (ts.mode === "one") chain(pv); else { chain([HOLES[0], FR.z + FR.th]); chain([HOLES[10], FR.z + FR.th]); }
+    // horizontal reference through the top box, and its axis
+    const tb = B.boxes[0], c0 = [(tb[0][0] + tb[1][0]) / 2, (tb[0][1] + tb[1][1]) / 2], o = T(c0);
+    s += `<line x1="${o[0]}" y1="${o[1]}" x2="550" y2="${o[1]}" stroke="#8f8aa3" stroke-width="1.2" stroke-dasharray="5 5"/>`;
+    const ax = [o[0] + 230 * ca, o[1] - 230 * sa];
+    s += `<line x1="${o[0]}" y1="${o[1]}" x2="${ax[0]}" y2="${ax[1]}" stroke="#ff9a3d" stroke-width="2.5"/>`;
+    const r = 120, a0 = 0, a1 = -a, large = 0, sweep = a > 0 ? 0 : 1;
+    s += `<path d="M${o[0] + r} ${o[1]} A${r} ${r} 0 ${large} ${sweep} ${o[0] + r * ca} ${o[1] - r * sa}" fill="none" stroke="#ff9a3d" stroke-width="1.5"/>`;
+    s += `<text x="${o[0] + r + 8}" y="${o[1] - (a > 0 ? 8 : -18)}" fill="#ff9a3d" font-size="15" font-family="IBM Plex Mono,monospace">${ang > 0 ? "+" : ang < 0 ? "−" : ""}${Math.abs(ang).toFixed(1)}°</text>`;
+    // frame + holes
+    s += `<path d="${path([[FR.x0, FR.z], [FR.x1, FR.z], [FR.x1, FR.z + FR.th], [FR.x0, FR.z + FR.th]])}" fill="#2b2737" stroke="#e9e6f2" stroke-width="1.5"/>`;
+    HOLES.forEach((h, k) => { const [x, y] = T([h, FR.z + FR.th / 2]); const on = ts.mode === "one" ? k === ts.hole : k === 0 || k === 10; s += `<circle cx="${x}" cy="${y}" r="${on ? 5 : 3}" fill="${on ? "#ff4fa0" : "#121019"}" stroke="#e9e6f2" stroke-width="1"/>`; });
+    for (const p of B.boxes) s += `<path d="${path(p)}" fill="#0c0b11" stroke="#f4f1ff" stroke-width="1.4"/>`;
+    // front marker
+    const fm = T([0.02, -0.3]); s += `<text x="${fm[0] + 10}" y="${fm[1]}" fill="#8f8aa3" font-size="12" font-family="IBM Plex Mono,monospace">front ▸</text>`;
+    // centre of gravity + plumb line (single pickup)
+    const g = T(B.cg);
+    if (ts.mode === "one") s += `<line x1="${T(pv)[0]}" y1="${T(pv)[1]}" x2="${g[0]}" y2="${Math.max(g[1] + 60, 440)}" stroke="#4fd8ff" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+    s += `<circle cx="${g[0]}" cy="${g[1]}" r="11" fill="#121019" stroke="#4fd8ff" stroke-width="2"/><path d="M${g[0]} ${g[1]}L${g[0]} ${g[1] - 11}A11 11 0 0 1 ${g[0] + 11} ${g[1]}Z M${g[0]} ${g[1]}L${g[0]} ${g[1] + 11}A11 11 0 0 1 ${g[0] - 11} ${g[1]}Z" fill="#4fd8ff"/>`;
+    s += `<text x="${g[0] + 16}" y="${g[1] + 5}" fill="#4fd8ff" font-size="13" font-family="IBM Plex Mono,monospace">CG</text>`;
+    $("tiltSvg").innerHTML = s;
+  }
+  function ui(ang) {
+    $("tOne").setAttribute("aria-pressed", ts.mode === "one"); $("tTwo").setAttribute("aria-pressed", ts.mode === "two");
+    $("tStraight").setAttribute("aria-pressed", ts.shape === "straight"); $("tJ").setAttribute("aria-pressed", ts.shape === "J");
+    $("tHoleRow").hidden = ts.mode !== "one"; $("tDhRow").hidden = ts.mode !== "two";
+    $("tDhO").textContent = (ts.dh > 0 ? "+" : "") + ts.dh + " cm";
+    $("tAng").textContent = (ang > 0 ? "+" : ang < 0 ? "−" : "") + Math.abs(ang).toFixed(1) + "°";
+    $("tDir").textContent = Math.abs(ang) < 0.25 ? "אופקי" : ang > 0 ? "מכוון למעלה" : "מכוון למטה";
+    $("tExplain").textContent = ts.mode === "one"
+      ? "במנוע אחד המערך מתנהג כמו מטוטלת: הוא מסתובב עד שמרכז הכובד (CG) נמצא בדיוק מתחת לנקודת התלייה. חור קדימה מה-CG מרים את החזית, וחור אחורה מוריד אותה. החליפו בין ישר ל-J באותו חור: ה-CG זז, ולכן גם הזווית. זו הסיבה שהחור נבחר בתוכנה לכל תצורה."
+      : "בשני מנועים הזווית נקבעת לפי הפרש הגובה ביניהם, ומרכז הכובד כמעט לא משנה. מנוע אחורי גבוה מוריד את החזית, ומנוע אחורי נמוך מרים אותה. היתרון: מכוונים אחרי ההרמה, בלי להוריד את המערך ולהחליף חור.";
+  }
+  let B = body(), raf = 0;
+  const reduce2 = matchMedia("(prefers-reduced-motion: reduce)");
+  function go() {
+    const tgt = target(B);
+    if (ts.ang === null || reduce2.matches) { ts.ang = tgt; draw(B, tgt); ui(tgt); return; }
+    cancelAnimationFrame(raf);
+    let v = 0;
+    const step = () => { const d = tgt - ts.ang; v = v * 0.82 + d * 0.06; ts.ang += v; draw(B, ts.ang); ui(ts.ang); if (Math.abs(d) > 0.02 || Math.abs(v) > 0.02) raf = requestAnimationFrame(step); else { ts.ang = tgt; draw(B, tgt); ui(tgt); } };
+    step();
+  }
+  $("tOne").onclick = () => { ts.mode = "one"; go(); };
+  $("tTwo").onclick = () => { ts.mode = "two"; go(); };
+  $("tStraight").onclick = () => { ts.shape = "straight"; B = body(); go(); };
+  $("tJ").onclick = () => { ts.shape = "J"; B = body(); go(); };
+  $("tHole").oninput = (e) => { ts.hole = +e.target.value; go(); };
+  $("tDh").oninput = (e) => { ts.dh = +e.target.value; go(); };
+  window.__tilt = { ts, target: () => target(B), body: () => B, go };
+  go();
+})();
+window.__la = { st, update, get R() { return R; } };
+update();
+})();
+</script>
+
+</body>
+</html>
