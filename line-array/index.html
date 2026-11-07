@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Line Array באולם</title>
+<title>Line Array/Ground stack theatre</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,6 +69,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .sp b{font-weight:500;min-width:30px;text-align:center}
 .note{font-size:13px;color:var(--muted);margin:0}
 .tbl{overflow-x:auto}
+.hallrows{display:grid;gap:12px}
 .tilt{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:760px){.tilt{grid-template-columns:minmax(0,1fr)}}
 .tilt-view{background:var(--scope);border:1px solid var(--scope-line);border-radius:10px;overflow:hidden}
@@ -129,7 +130,7 @@ a{color:var(--accent)}
 <div class="wrap" dir="rtl">
 <header>
   <div class="eyebrow">Fig 4 · Line array · חתך אולם</div>
-  <h1>Line Array באולם</h1>
+  <h1 dir="ltr" style="text-align:right">Line Array/Ground stack theatre</h1>
   <p>חתך צד של אולם עם רצפה משופעת. המפה מראה איך הסאונד הישיר מהמערך מתפזר על הקהל: איפה חזק, איפה חלש, ומה קורה כשמשנים זוויות, מספר תיבות, גובה ותדר. לחצו על הקהל כדי להזיז את המאזין.</p>
 </header>
 
@@ -158,7 +159,7 @@ a{color:var(--accent)}
 <div class="chips">
   <div class="chip" id="cSpread"><b>–</b><span>הפרש רמות בקהל, מהשורה הראשונה עד האחרונה</span></div>
   <div class="chip" id="cUnder"><b>–</b><span>השורות הקדמיות (עד 6 m מהבמה), ממוצע ביחס ל-FOH</span></div>
-  <div class="chip" id="cCouple"><b>–</b><span>תוספת מהקשירה ב-FOH, לעומת התיבה החזקה לבדה</span></div>
+  <div class="chip" id="cCouple"><b>–</b><span>Coupling gain ב-FOH: כל המערך לעומת התיבה החזקה לבדה</span></div>
   <div class="chip" id="cLen"><b>–</b><span id="cLenTxt">אורך המערך</span></div>
   <div class="chip" id="cTrans"><b>–</b><span id="cTransTxt">מרחק המעבר לשדה רחוק</span></div>
 </div>
@@ -172,7 +173,7 @@ a{color:var(--accent)}
     <div class="row" id="rowGsN" hidden><label for="gsN">טופים על 2 סאבים</label><select id="gsN"><option value="2">2 טופים</option><option value="3">3 טופים</option><option value="4">4 טופים</option><option value="6">6 טופים</option></select><output id="gsNO"></output></div>
     <div class="row" id="rowGsA" hidden><label for="gsA">זווית הטופ התחתון (חור ב-frame)</label><select id="gsA" dir="ltr"><option value="-7">−7°</option><option value="-3.5">−3.5°</option><option value="0">0°</option><option value="3.5">+3.5°</option><option value="7">+7°</option></select><output id="gsAO"></output></div>
     <div class="row" id="rowStage" hidden><label for="stageH">גובה הבמה</label><input type="range" id="stageH" min="0.4" max="2" step="0.1"><output id="stageO"></output></div>
-    <div class="row"><label for="earH">גובה המדידה (אוזניים)</label><select id="earH"><option value="1.2">קהל יושב: &#x2066;1.2 m&#x2069;</option><option value="1.7">קהל עומד: &#x2066;1.7 m&#x2069;</option></select><output id="earO"></output></div>
+
     <div class="row"><label for="freq">פס תדר (1/3 אוקטבה)</label><input type="range" id="freq" min="0" max="24" step="1"><output id="freqO"></output></div>
     <div class="row"><label>רמה אצל המאזין</label><span class="note">לחצו על הקהל בחתך או הזיזו את המחוון</span><output id="lisO"></output></div>
     <div class="row"><label for="lisx">מרחק המאזין</label><input type="range" id="lisx" min="2" max="30" step="0.25"><output id="lisxO"></output></div>
@@ -189,6 +190,19 @@ a{color:var(--accent)}
     <div class="splays" id="splays"></div>
     <p class="note" id="splayNote">כל תיבה תלויה מנקודת החיבור הקדמית, והזווית פותחת רווח מאחור. טווח 0°–14° בצעדים של 1°, כמו ב-d&amp;b Y8. ה-J חושב בהדמיה הזו כדי לצמצם את הפרש הרמות באולם הזה. הוא לא הגדרה של היצרן.</p>
   </div>
+</div>
+
+<div class="box" id="hallBox">
+  <h2>מידות האולם</h2>
+  <div class="hallrows">
+    <div class="row"><label for="hDepth">עומק האולם</label><input type="range" id="hDepth" min="18" max="45" step="1"><output id="hDepthO"></output></div>
+    <div class="row"><label for="hRake">זווית השיפוע</label><input type="range" id="hRake" min="0" max="25" step="1"><output id="hRakeO"></output></div>
+    <div class="row"><label for="hRakeX">תחילת השיפוע (מהבמה)</label><input type="range" id="hRakeX" min="0" max="15" step="0.5"><output id="hRakeXO"></output></div>
+    <div class="row"><label for="fohX">מיקום FOH (מרחק מהבמה)</label><input type="range" id="fohX" min="6" max="28" step="0.5"><output id="fohO"></output></div>
+    <div class="row"><label for="earH">גובה המדידה (אוזניים)</label><select id="earH"><option value="1.2">קהל יושב: &#x2066;1.2 m&#x2069;</option><option value="1.7">קהל עומד: &#x2066;1.7 m&#x2069;</option></select><output id="earO"></output></div>
+  </div>
+  <div class="presets"><button class="btn" id="hReset">חזרה למידות ברירת המחדל</button></div>
+  <p class="note" id="hallNote">ה-J המוכן חושב לאולם ברירת המחדל: עומק <span class="ltr">31 m</span>, שיפוע של <span class="ltr">10°</span> שמתחיל <span class="ltr">6 m</span> מהבמה. אחרי שינוי מידות, הריצו AutoSplay. גובה התקרה מתאים את עצמו: לפחות <span class="ltr">14 m</span>, ולפחות <span class="ltr">6 m</span> מעל השורה האחרונה.</p>
 </div>
 
 <div class="box">
@@ -240,7 +254,7 @@ a{color:var(--accent)}
 <section>
   <div class="eyebrow" style="margin-bottom:8px">חמש תמונות להסבר בכיתה</div>
   <div class="scenes">
-    <div class="scene" data-scene="couple"><h3>קשירה: הרבה תיבות, חזית גל אחת</h3>
+    <div class="scene" data-scene="couple"><h3>Coupling: הרבה תיבות, חזית גל אחת</h3>
       <p>תיבות צמודות, קרובות זו לזו ביחס לאורך הגל, מתחברות לחזית גל אחת (coupling). קרוב למערך ישר הרמה יורדת לאט יותר, בערך 3 dB להכפלת מרחק, ורחוק ממנו היא חוזרת ל-6 dB. ההגדרה מציגה 12 תיבות ישרות ב-500 Hz עם גלים. אחר כך העבירו ל-1 kHz וראו איך האלומה מתכווצת.</p>
       <button class="btn" data-go="couple">הצג</button></div>
     <div class="scene" data-scene="j"><h3>הזוויות מעצבות את הכיסוי (J)</h3>
@@ -270,7 +284,7 @@ a{color:var(--accent)}
       <li>גובה המדידה: 1.2 m מעל הרצפה לקהל יושב ו-1.7 m לקהל עומד. ה-J המוכן חושב לקהל יושב. לקהל עומד כדאי להריץ AutoSplay. גובה הבמה משנה את מיקום ה-ground stack ואת הבמה בציור.</li>
       <li>Ground stack: הסאבים מצוירים כבסיס פיזי בלבד ולא משמיעים סאונד בהדמיה. גם הקהל עצמו לא חוסם סאונד בחישוב, אף שבמערך נמוך הראשים בשורות הקדמיות בולעים חלק מהגבוהים לשורות שמאחוריהם. המדריך לא מגדיר איזה כיוון של זווית הטופ התחתון הוא חיובי. בהדמיה, ערך חיובי פירושו כלפי מעלה.</li>
       <li>Pink: הרמה בכל פס 1/3 אוקטבה מ-125 Hz עד 8 kHz, ממוצעת ב-dB, כדי שחסר בגבוהים ייספר כמו חסר בנמוכים.</li>
-      <li>מידות האולם להמחשה, של אולם רב-תכליתי ממוצע: עומק 31 m, רצפה שטוחה ב-6 m הראשונים ואז שיפוע של 10° עד הקיר האחורי, כך שהשורה האחרונה כ-4.4 m מעל הרצפה. תקרה ב-14 m, ו-FOH ב-14 m מהבמה. תכנון אמיתי נעשה בתוכנת היצרן: d&amp;b ArrayCalc או L-Acoustics Soundvision.</li>
+      <li>מידות האולם להמחשה, של אולם רב-תכליתי ממוצע: עומק 31 m, רצפה שטוחה ב-6 m הראשונים ואז שיפוע של 10° עד הקיר האחורי, כך שהשורה האחרונה כ-4.4 m מעל הרצפה. תקרה ב-14 m. ‏FOH ב-14 m מהבמה כברירת מחדל, ואפשר להזיז אותו. כל הרמות במפה ובגרפים מוצגות ביחס אליו. תכנון אמיתי נעשה בתוכנת היצרן: d&amp;b ArrayCalc או L-Acoustics Soundvision.</li>
     </ul>
   </div>
   <div>
@@ -433,7 +447,7 @@ function pinkFreqs() {
 // audience lines: floor (seated ears) and balcony (raked)
 function audiencePts(step) {
   const floor = [], bal = [];
-  for (let x = 2; x <= 30.001; x += step) floor.push(x, floorZ(x) + HALL.ear);
+  for (let x = 2; x <= HALL.rear - 0.999; x += step) floor.push(x, floorZ(x) + HALL.ear);
   return { floor, bal };
 }
 
@@ -442,8 +456,15 @@ const PRE = {"trim":10.5,"J":{"4":{"site":-9,"sp":[7,14,14]},"5":{"site":-8,"sp"
 const $ = (id) => document.getElementById(id);
 const st = { sys: "la", mode: "pink", fi: 12, n: 12, trim: PRE.trim, site: PRE.J[12].site, saved: { gs: { n: 4, sp: PRE.GS[4].sp.slice(), site: GS_A0[PRE.GS[4].a0], trim: PRE.trim, preset: "J" } },
   sp: PRE.J[12].sp.slice(), preset: "J", rays: true, hl: -1, pin: -1, waves: false, deck: "floor", lx: 14 };
-const W = 1600, H = 690, X0 = HALL.x0, X1 = HALL.x1, Z0 = HALL.z0, Z1 = HALL.z1;
-const sx = (x) => ((x - X0) / (X1 - X0)) * W, sy = (z) => ((Z1 - z) / (Z1 - Z0)) * H;
+const W = 1600, H = 690, X0 = HALL.x0, Z0 = HALL.z0;
+let X1 = HALL.x1, Z1 = HALL.z1, SC = 1, OFX = 0, OFY = 0;
+// one scale for both axes, so angles in the drawing are true; the ceiling follows a deep, steep hall
+function layout() {
+  HALL.ceil = Math.max(14, Math.ceil(floorZ(HALL.rear) + 6));
+  X1 = HALL.rear + 0.6; Z1 = HALL.ceil + 0.5;
+  SC = Math.min(W / (X1 - X0), H / (Z1 - Z0)); OFX = (W - (X1 - X0) * SC) / 2; OFY = (H - (Z1 - Z0) * SC) / 2;
+}
+const sx = (x) => OFX + (x - X0) * SC, sy = (z) => OFY + (Z1 - z) * SC;
 const STOPS = [[-24, [16, 12, 30]], [-18, [52, 22, 96]], [-12, [120, 30, 128]], [-6, [214, 52, 120]], [-2, [255, 92, 96]], [0, [255, 140, 52]], [3, [255, 206, 70]], [6, [255, 246, 200]]];
 function cmap(v) {
   if (v <= STOPS[0][0]) return STOPS[0][1];
@@ -461,7 +482,7 @@ const sgn = (v) => { const r = Math.round(v * 10) / 10; return (r > 0 ? "+" : r 
 // ---------- computation ----------
 const cache = {};
 function src() { return st.sys === "la" ? arrayGeom(st.n, st.sp, st.trim, st.site) : gsGeom(st.n, st.sp, st.site); }
-function key() { return `${st.sys}${st.n}|${st.sp.join(",")}|${st.trim}|${st.site}|${HALL.stageH}|${HALL.ear}`; }
+function key() { return `${st.sys}${st.n}|${st.sp.join(",")}|${st.trim}|${st.site}|${HALL.stageH}|${HALL.ear}|${HALL.foh[0]}|${HALL.rear}|${HALL.rake}|${HALL.rakeX}`; }
 // flown and ground stack keep their own settings; switching swaps them
 function setSys(s) {
   if (s === st.sys) return;
@@ -480,6 +501,8 @@ function grid(res) {
 let GRID, AUD;
 // the stage height changes which grid cells are solid; the ear height moves the listening line
 function rebuildHall() {
+  layout();
+  HALL.foh[0] = Math.min(HALL.foh[0], HALL.rear - 3);
   GRID = { pink: grid(0.22), tone: grid(0.14), wave: grid(0.08), pinkQ: grid(0.45), toneQ: grid(0.3) };
   AUD = audiencePts(0.25); HALL.foh[1] = floorZ(HALL.foh[0]) + HALL.ear;
   for (const q in geoms) delete geoms[q];
@@ -530,7 +553,7 @@ function compute(quick) {
   R = { s, heat, G, fl, bl, cg, fr, frf, ref, lisDb, wave };
 }
 function lisPt() {
-  const x = Math.min(30, Math.max(2, st.lx)); return [x, floorZ(x) + HALL.ear];
+  const x = Math.min(HALL.rear - 1, Math.max(2, st.lx)); return [x, floorZ(x) + HALL.ear];
 }
 
 // ---------- drawing: hall ----------
@@ -575,7 +598,7 @@ function transInfo() {
 function drawTrans() {
   const T = transInfo(); if (!T || T.d <= 0) return;
   const c = R.s.reduce((a, e) => [a[0] + e.cx / R.s.length, a[1] + e.cz / R.s.length], [0, 0]);
-  const rpx = (T.d / (X1 - X0)) * W;
+  const rpx = T.d * SC;
   cx.save(); cx.beginPath(); cx.rect(sx(0), sy(HALL.ceil), sx(HALL.rear) - sx(0), sy(0) - sy(HALL.ceil)); cx.clip();
   cx.beginPath(); cx.arc(sx(c[0]), sy(c[1]), rpx, -Math.PI / 2, Math.PI / 2); cx.strokeStyle = "#4fd8ff"; cx.lineWidth = 2.5; cx.setLineDash([10, 7]); cx.stroke(); cx.setLineDash([]);
   cx.restore();
@@ -590,7 +613,7 @@ function drawTrans() {
 function aimHit(e) {
   const R6 = HALL.rakeX, E = HALL.ear;
   const segs = [
-    [2, E, R6, E, "floor"], [R6, E, 30, floorZ(30) + E, "floor"],
+    [2, E, R6, E, "floor"], [R6, E, HALL.rear - 1, floorZ(HALL.rear - 1) + E, "floor"],
     [X0, 0, R6, 0, "front"], [R6, 0, HALL.rear, floorZ(HALL.rear), "front"], [X0, HALL.stageH, 0, HALL.stageH, "stage"],
     [HALL.rear, floorZ(HALL.rear), HALL.rear, HALL.ceil, "wall"], [X0, HALL.ceil, HALL.rear, HALL.ceil, "ceil"],
   ];
@@ -683,7 +706,8 @@ function aimTable() {
 function drawHall(t) {
   cx.fillStyle = "#121019"; cx.fillRect(0, 0, W, H);
   cx.imageSmoothingEnabled = true;
-  if (R.wave) { paintWave(t); cx.drawImage(woff, 0, 0, W, H); } else cx.drawImage(off, 0, 0, W, H);
+  const iw = (X1 - X0) * SC, ih = (Z1 - Z0) * SC;
+  if (R.wave) { paintWave(t); cx.drawImage(woff, sx(X0), sy(Z1), iw, ih); } else cx.drawImage(off, sx(X0), sy(Z1), iw, ih);
   // solids
   cx.fillStyle = "#1d1a27";
   const poly = (ps) => { cx.beginPath(); ps.forEach(([x, z], i) => (i ? cx.lineTo(sx(x), sy(z)) : cx.moveTo(sx(x), sy(z)))); cx.closePath(); cx.fill(); };
@@ -776,10 +800,10 @@ function axes(c, w, h, m, xl, yl) {
 function drawDist() {
   const c = $("gDist").getContext("2d"), w = 760, h = 360, m = { l: 54, r: 14, t: 14, b: 40 };
   axes(c, w, h);
-  const dmin = 4, dmax = 40, ymin = -24, ymax = 12;
+  const dmin = 4, dmax = 60, ymin = -24, ymax = 12;
   const gx = (d) => m.l + (Math.log(d / dmin) / Math.log(dmax / dmin)) * (w - m.l - m.r), gy = (v) => m.t + ((ymax - v) / (ymax - ymin)) * (h - m.t - m.b);
   c.textAlign = "center";
-  for (const d of [4, 5, 7, 10, 15, 20, 30, 40]) { c.beginPath(); c.moveTo(gx(d), m.t); c.lineTo(gx(d), h - m.b); c.stroke(); c.fillText(d + "", gx(d), h - m.b + 16); }
+  for (const d of [4, 5, 7, 10, 15, 20, 30, 40, 60]) { c.beginPath(); c.moveTo(gx(d), m.t); c.lineTo(gx(d), h - m.b); c.stroke(); c.fillText(d + "", gx(d), h - m.b + 16); }
   c.fillText("מרחק מהמערך (m, סקאלה לוגריתמית)", (m.l + w - m.r) / 2, h - 6);
   c.textAlign = "right";
   for (let v = ymin; v <= ymax; v += 6) { c.beginPath(); c.moveTo(m.l, gy(v)); c.lineTo(w - m.r, gy(v)); c.stroke(); c.fillText((v > 0 ? "+" : "") + v, m.l - 6, gy(v) + 4); }
@@ -824,7 +848,7 @@ function readouts() {
   const open = [];
   open.push(...R.fl);
   const spread = Math.max(...open) - Math.min(...open);
-  const under = []; for (let i = 0; i < R.fl.length; i++) if (AUD.floor[2 * i] <= HALL.rakeX) under.push(R.fl[i]);
+  const under = []; for (let i = 0; i < R.fl.length; i++) if (AUD.floor[2 * i] <= 6) under.push(R.fl[i]);
   const um = under.reduce((a, b) => a + b, 0) / under.length;
   const set = (id, txt, cls) => { const el = $(id); el.querySelector("b").textContent = txt; el.className = "chip " + (cls || ""); };
   set("cSpread", spread.toFixed(1) + " dB", spread <= 6 ? "good" : spread > 12 ? "bad" : "");
@@ -852,6 +876,11 @@ function syncUI() {
   $("rowN").hidden = gs; $("rowTrim").hidden = gs; $("rowSite").hidden = gs; $("rowGsN").hidden = !gs; $("rowGsA").hidden = !gs;
   $("gsN").value = String(st.n); $("gsNO").textContent = `${st.n + 2} תיבות`;
   $("rowStage").hidden = !gs; $("stageH").value = HALL.stageH; $("stageO").textContent = HALL.stageH.toFixed(1) + " m";
+  $("hDepth").value = HALL.rear; $("hDepthO").textContent = HALL.rear + " m";
+  $("hRake").value = Math.round(Math.atan(HALL.rake) * 180 / Math.PI); $("hRakeO").textContent = Math.round(Math.atan(HALL.rake) * 180 / Math.PI) + "°";
+  $("hRakeX").value = HALL.rakeX; $("hRakeXO").textContent = HALL.rakeX.toFixed(1) + " m";
+  $("fohX").max = HALL.rear - 3; $("lisx").max = HALL.rear - 1;
+  $("fohX").value = HALL.foh[0]; $("fohO").textContent = HALL.foh[0].toFixed(1) + " m";
   $("earH").value = String(HALL.ear); $("earO").textContent = HALL.ear.toFixed(1) + " m";
   $("gsA").value = String(st.site); $("gsAO").textContent = (st.site > 0 ? "+" : st.site < 0 ? "−" : "") + Math.abs(st.site) + "°";
   $("thSp").textContent = gs ? "splay מתחתיה" : "splay מעליה";
@@ -901,6 +930,12 @@ $("sysGS").onclick = () => { setSys("gs"); update(); };
 $("gsN").onchange = (e) => { st.n = +e.target.value; if (st.preset === "custom" || st.preset === "auto") { st.preset = "custom"; const sp = st.sp.slice(0, st.n - 1); while (sp.length < st.n - 1) sp.push(sp[sp.length - 1] || 0); st.sp = sp; } else applyPreset(st.preset); update(); };
 $("gsA").onchange = (e) => { st.site = +e.target.value; st.preset = "custom"; update(); };
 $("stageH").oninput = (e) => { HALL.stageH = Math.round(+e.target.value * 10) / 10; rebuildHall(); update(); };
+const hallChanged = () => { st.lx = Math.min(st.lx, HALL.rear - 1); rebuildHall(); update(); };
+$("hDepth").oninput = (e) => { HALL.rear = +e.target.value; hallChanged(); };
+$("hRake").oninput = (e) => { HALL.rake = Math.tan((+e.target.value * Math.PI) / 180); hallChanged(); };
+$("hRakeX").oninput = (e) => { HALL.rakeX = +e.target.value; hallChanged(); };
+$("hReset").onclick = () => { HALL.rear = 31; HALL.rake = Math.tan((10 * Math.PI) / 180); HALL.rakeX = 6; HALL.foh[0] = 14; hallChanged(); };
+$("fohX").oninput = (e) => { HALL.foh[0] = +e.target.value; HALL.foh[1] = floorZ(HALL.foh[0]) + HALL.ear; delete geoms[Object.keys(geoms).find((q) => q.startsWith("foh|"))]; update(); };
 $("earH").onchange = (e) => { HALL.ear = +e.target.value; rebuildHall(); update(); };
 $("modePink").onclick = () => { st.mode = "pink"; update(); };
 $("modeTone").onclick = () => { st.mode = "tone"; update(); };
@@ -965,9 +1000,10 @@ async function autoSplay() {
 $("pAuto").onclick = autoSplay;
 $("splays").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; const i = +b.dataset.i; st.sp[i] = Math.max(0, Math.min(MAX_SPLAY, st.sp[i] + +b.dataset.d)); st.preset = "custom"; update(); };
 cv.addEventListener("click", (e) => {
-  const r = cv.getBoundingClientRect(), x = X0 + ((e.clientX - r.left) / r.width) * (X1 - X0), z = Z1 - ((e.clientY - r.top) / r.height) * (Z1 - Z0);
-  if (x < 1.5 || x > 30.5 || Math.abs(z - floorZ(x) - HALL.ear) > 2.5) return;
-  st.lx = Math.round(Math.min(30, Math.max(2, x)) * 4) / 4; update();
+  const r = cv.getBoundingClientRect(), px = ((e.clientX - r.left) / r.width) * W, py = ((e.clientY - r.top) / r.height) * H;
+  const x = X0 + (px - OFX) / SC, z = Z1 - (py - OFY) / SC;
+  if (x < 1.5 || x > HALL.rear - 0.5 || Math.abs(z - floorZ(x) - HALL.ear) > 2.5) return;
+  st.lx = Math.round(Math.min(HALL.rear - 1, Math.max(2, x)) * 4) / 4; update();
 });
 const SCENES = {
   couple: () => { setSys("la"); st.n = 12; applyPreset("straight"); st.site = 0; st.trim = 7.5; st.mode = "tone"; st.fi = THIRDS.indexOf(500); st.waves = true; st.rays = true; st.deck = "floor"; st.lx = 14; },
