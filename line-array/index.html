@@ -493,7 +493,11 @@ const PALS = {
 const darkMQ = matchMedia("(prefers-color-scheme: dark)");
 const themeNow = () => document.documentElement.dataset.theme || (darkMQ.matches ? "dark" : "light");
 let PAL = PALS[themeNow()];
-try { const sv = localStorage.getItem("la-theme"); if (sv === "light" || sv === "dark") { document.documentElement.dataset.theme = sv; PAL = PALS[sv]; } } catch (e) {}
+// dark by default; light only when the viewer chose it with the button
+let savedTheme = null;
+try { savedTheme = localStorage.getItem("la-theme"); } catch (e) {}
+document.documentElement.dataset.theme = savedTheme === "light" ? "light" : "dark";
+PAL = PALS[document.documentElement.dataset.theme];
 const st = { sys: "la", mode: "pink", fi: 12, n: 12, trim: PRE.trim, site: PRE.J[12].site, saved: { gs: { n: 4, sp: PRE.GS[4].sp.slice(), site: GS_A0[PRE.GS[4].a0], trim: PRE.trim, preset: "J" } },
   sp: PRE.J[12].sp.slice(), preset: "J", rays: true, hl: -1, pin: -1, waves: false, deck: "floor", lx: 14 };
 const W = 1600, H = 690, X0 = HALL.x0, Z0 = HALL.z0;
