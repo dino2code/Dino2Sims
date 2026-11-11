@@ -126,7 +126,7 @@ a{color:var(--accent)}
         <div class="r" id="rowArcT"><label for="arcT">סוג קשת</label><select id="arcT"><option value="delay">קו ישר עם דיליי (Arc delay)</option><option value="phys">קשת פיזית</option></select><output></output></div>
         <div class="r" id="rowLoc"><label>מיקום</label><div class="seg" role="group" aria-label="מיקום"><button id="mC" aria-pressed="true">מרכז</button><button id="mLR" aria-pressed="false">Left / Right</button></div><output></output></div>
         <div class="r" id="rowLR"><label for="lr">מרחק בין L ל-R</label><input type="range" id="lr" min="6" max="30" step="1"><output id="lrO"></output></div>
-        <p class="note">לחיצה כפולה על מספר ליד מחוון פותחת הקלדה של ערך מדויק.</p>
+        <p class="note">לחיצה כפולה על מספר ליד מחוון פותחת הקלדה של ערך מדויק. במרווחים אפשר להקליד גם מעבר לקצה המחוון, והמפה גדלה בהתאם.</p>
         <p class="note" id="presetNote"></p>
         <p class="note warnNote" id="warnNote" hidden></p>
       </section>
@@ -192,6 +192,15 @@ const BANDS = [31.5, 40, 50, 63, 80, 100, 125];
 const st = { preset: "card", n: 1, sp: 1.0, ang: 60, arcT: "delay", fx: null, cardT: "inline", sig: "tone", fi: FREQS.indexOf(63), foh: 20, subs: [], locked: true, lr: false, lrW: 14, m: 1, w: 1.2 };
 const fHz = () => st.fx ?? FREQS[st.fi]; // an exact typed frequency overrides the slider step
 const AREA = { x0: -20, x1: 20, y0: -12, y1: 28 };
+// grow the (square) map when typed spacings push the subs or the FOH outside the default 40 x 40 m
+function fitArea() {
+  const xs = st.subs.map((s) => Math.abs(s.x)), ys = st.subs.map((s) => s.y);
+  const ax = Math.max(0, ...xs), ymin = Math.min(0, ...ys), c = centroid();
+  let S = Math.max(40, 2 * ax + 16, c[1] + st.foh + 8 - Math.min(-12, ymin - 6));
+  S = Math.ceil(S / 10) * 10;
+  AREA.x0 = -S / 2; AREA.x1 = S / 2; AREA.y0 = Math.min(-12, Math.floor(ymin - 6)); AREA.y1 = AREA.y0 + S;
+}
+const AS = () => (AREA.x1 - AREA.x0) / 40; // map scale relative to the default
 
 // ---------- presets (McCarthy ch. 10) ----------
 const PRE = {
@@ -278,8 +287,8 @@ function grid(res) {
 let REF = 0;
 function compute(quick) {
   const c = centroid();
-  REF = level(c[0], c[1] + st.foh);
-  G = grid(quick ? (st.sig === "tone" ? 0.4 : 0.8) : st.sig === "tone" ? 0.2 : 0.4);
+  fitArea(); REF = level(c[0], c[1] + st.foh);
+  G = grid(AS() * (quick ? (st.sig === "tone" ? 0.4 : 0.8) : st.sig === "tone" ? 0.2 : 0.4));
 }
 
 // ---------- colour scale: 3 dB steps, prediction-software style ----------
@@ -315,8 +324,9 @@ function draw2d() {
   g.imageSmoothingEnabled = false; g.drawImage(off, PAD, 16, PW, PW);
   // grid + axis labels
   g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 1; g.fillStyle = mu; g.font = font(400, 14, "IBM Plex Mono, monospace");
-  for (let x = AREA.x0; x <= AREA.x1; x += 5) { g.beginPath(); g.moveTo(X(x), 16); g.lineTo(X(x), 16 + PW); g.stroke(); g.textAlign = "center"; g.fillText(String(x), X(x), N - 4); }
-  for (let y = AREA.y0 + 2; y <= AREA.y1; y += 5) { g.beginPath(); g.moveTo(PAD, Yp(y)); g.lineTo(PAD + PW, Yp(y)); g.stroke(); g.textAlign = "right"; g.fillText(String(y), PAD - 6, Yp(y) + 5); }
+  const tk = AS() > 1.5 ? 10 : 5;
+  for (let x = Math.ceil(AREA.x0 / tk) * tk; x <= AREA.x1; x += tk) { g.beginPath(); g.moveTo(X(x), 16); g.lineTo(X(x), 16 + PW); g.stroke(); g.textAlign = "center"; g.fillText(String(x), X(x), N - 4); }
+  for (let y = Math.ceil(AREA.y0 / tk) * tk; y <= AREA.y1; y += tk) { g.beginPath(); g.moveTo(PAD, Yp(y)); g.lineTo(PAD + PW, Yp(y)); g.stroke(); g.textAlign = "right"; g.fillText(String(y), PAD - 6, Yp(y) + 5); }
   // stage edge + FOH
   g.strokeStyle = fg; g.setLineDash([8, 6]); g.beginPath(); g.moveTo(PAD, Yp(0.6)); g.lineTo(PAD + PW, Yp(0.6)); g.stroke(); g.setLineDash([]);
   g.fillStyle = fg; g.textAlign = "left"; g.font = font(600, 15, "Assistant, sans-serif"); g.fillText("STAGE ↑", PAD + 8, Yp(0.6) - 8); g.fillText("AUDIENCE ↓", PAD + 8, Yp(0.6) + 10 + 14 * FS());
@@ -506,12 +516,13 @@ const KEY = { n: "n", sp: "sp", m: "m", w: "w", ang: "ang", lr: "lrW", foh: "foh
 function editValue(out) {
   const rng = out.parentElement.querySelector('input[type="range"]'); if (!rng || out.dataset.editing) return;
   const id = rng.id, key = KEY[id]; if (!key) return;
-  const lo = id === "f" ? 20 : +rng.min, hi = id === "f" ? 250 : +rng.max, isInt = id === "n" || id === "m";
+  const open = id === "sp" || id === "w" || id === "lr"; // spacings: no upper limit when typed
+  const lo = id === "f" ? 20 : +rng.min, hi = id === "f" ? 250 : open ? Infinity : +rng.max, isInt = id === "n" || id === "m";
   const cur = id === "f" ? fHz() : st[key];
   out.dataset.editing = "1"; const keep = out.textContent; out.textContent = "";
   const inp = document.createElement("input");
   inp.type = "text"; inp.inputMode = isInt ? "numeric" : "decimal"; inp.className = "typed"; inp.value = String(+(+cur).toFixed(2));
-  inp.setAttribute("aria-label", `ערך מדויק, ${lo} עד ${hi}`); out.appendChild(inp); inp.focus(); inp.select();
+  inp.setAttribute("aria-label", open ? `ערך מדויק, מ-${lo} ומעלה` : `ערך מדויק, ${lo} עד ${hi}`); out.appendChild(inp); inp.focus(); inp.select();
   let done = false;
   const finish = (ok) => {
     if (done) return; done = true; delete out.dataset.editing; out.textContent = keep;
