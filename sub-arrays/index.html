@@ -53,6 +53,8 @@ td input:disabled{opacity:.55;cursor:not-allowed}
 @media (max-width:460px){.r{grid-template-columns:minmax(0,1fr) 70px}.r input[type=range],.r select{grid-column:1/-1}}
 .r label{font-size:14px;color:var(--muted)}
 .r output{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:left}
+.r output[id]{cursor:text;text-decoration:underline dotted var(--muted);text-underline-offset:4px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.r .typed{width:100%;font:500 16px var(--f-mono);direction:ltr;text-align:left;background:var(--bg);color:var(--fg);border:1px solid var(--accent);border-radius:6px;padding:4px 6px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select{font:14px var(--f-body);padding:5px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
 .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -114,16 +116,17 @@ a{color:var(--accent)}
       <section class="panel">
         <h2>תצורה</h2>
         <div class="seg" role="group" aria-label="תצורה">
-          <button id="pSingle" aria-pressed="false">סאב אחד</button><button id="pEnd" aria-pressed="false">End fire</button><button id="pCard" aria-pressed="true">Gradient in-line</button><button id="pFbf" aria-pressed="false">Gradient FBF</button><button id="p31" aria-pressed="false">Gradient 3:1</button><button id="pArc" aria-pressed="false">Arc</button>
+          <button id="pSingle" aria-pressed="false">סאב אחד</button><button id="pEnd" aria-pressed="false">End fire</button><button id="pCard" aria-pressed="true">Gradient in-line</button><button id="pFb" aria-pressed="false">Gradient FB</button><button id="pFbf" aria-pressed="false">Gradient FBF</button><button id="p31" aria-pressed="false">Gradient 3:1</button><button id="pArc" aria-pressed="false">Arc</button>
         </div>
         <div class="r" id="rowN"><label for="n" id="nL">מספר</label><input type="range" id="n" min="1" max="16" step="1"><output id="nO"></output></div>
         <div class="r" id="rowSp"><label for="sp" id="spL">מרווח</label><input type="range" id="sp" min="0.3" max="3" step="0.05"><output id="spO"></output></div>
         <div class="r" id="rowM"><label for="m" id="mL">מערכים בשורה</label><input type="range" id="m" min="1" max="8" step="1"><output id="mO"></output></div>
         <div class="r" id="rowW"><label for="w">מרווח בין המערכים</label><input type="range" id="w" min="0.6" max="3" step="0.05"><output id="wO"></output></div>
         <div class="r" id="rowAng"><label for="ang">זווית הקשת</label><input type="range" id="ang" min="0" max="140" step="5"><output id="angO"></output></div>
-        <div class="r" id="rowArcT"><label for="arcT">סוג קשת</label><select id="arcT"><option value="phys">קשת פיזית</option><option value="delay">קו ישר עם דיליי (Arc delay)</option></select><output></output></div>
+        <div class="r" id="rowArcT"><label for="arcT">סוג קשת</label><select id="arcT"><option value="delay">קו ישר עם דיליי (Arc delay)</option><option value="phys">קשת פיזית</option></select><output></output></div>
         <div class="r" id="rowLoc"><label>מיקום</label><div class="seg" role="group" aria-label="מיקום"><button id="mC" aria-pressed="true">מרכז</button><button id="mLR" aria-pressed="false">Left / Right</button></div><output></output></div>
         <div class="r" id="rowLR"><label for="lr">מרחק בין L ל-R</label><input type="range" id="lr" min="6" max="30" step="1"><output id="lrO"></output></div>
+        <p class="note">לחיצה כפולה על מספר ליד מחוון פותחת הקלדה של ערך מדויק.</p>
         <p class="note" id="presetNote"></p>
         <p class="note warnNote" id="warnNote" hidden></p>
       </section>
@@ -141,7 +144,7 @@ a{color:var(--accent)}
     <div class="tbl"><table id="tbl">
       <thead><tr><th>#</th><th>X (m)</th><th>Y (m)</th><th>כיוון</th><th>Delay (ms)</th><th>Polarity</th><th>Gain (dB)</th><th>Mute</th></tr></thead><tbody></tbody>
     </table></div>
-    <p class="note">X לרוחב הבמה, Y לעומק: ערך חיובי הוא לכיוון הקהל. כל שינוי בטבלה מחושב מיד. הכיוון משמש לציור בלבד, חוץ מבערימות. ב-FBF ו-3:1 כל ערימה היא שלושה או ארבעה סאבים: X ו-Y בטבלה הם מיקום הדרייבר, ולכן הסאב שפונה אחורה נמצא בגב הערימה. המיקומים נעולים לפי התצורה. כדי להזיז סאב או ערימה, ידנית בטבלה או בגרירה על המפה, לחצו על המנעול שמעל המפה. כל שינוי בתצורה מחזיר את המיקומים האוטומטיים.</p>
+    <p class="note">X לרוחב הבמה, Y לעומק: ערך חיובי הוא לכיוון הקהל. כל שינוי בטבלה מחושב מיד. הכיוון משמש לציור בלבד, חוץ מבערימות. ב-FB, ‏FBF ו-3:1 כל ערימה היא שניים עד ארבעה סאבים: X ו-Y בטבלה הם מיקום הדרייבר, ולכן הסאב שפונה אחורה נמצא בגב הערימה. המיקומים נעולים לפי התצורה. כדי להזיז סאב או ערימה, ידנית בטבלה או בגרירה על המפה, לחצו על המנעול שמעל המפה. כל שינוי בתצורה מחזיר את המיקומים האוטומטיים.</p>
   </section>
 
   <div class="graphs">
@@ -158,7 +161,8 @@ a{color:var(--accent)}
         <li><b>Polarity מול דיליי:</b> היפוך polarity נותן הפרש של 180° בכל התדרים. דיליי נותן הפרש פאזה שמשתנה עם התדר. אותם 8 ms מטים את האלומה ב-31 Hz, מבטלים ב-63 Hz ומתחברים שוב ב-125 Hz.</li>
         <li><b>Cardioid (gradient in-line):</b> שני סאבים שפונים קדימה, במרחק של עד 1 m. הסאב האחורי מקבל דיליי שווה למרחק, ו-polarity הפוך. מאחור הם מגיעים יחד ומתבטלים. מקדימה החיבור תלוי בתדר, ולכן היעילות קדימה פחותה מ-6 dB.</li>
         <li><b>Cardioid FBF (gradient inverted stack):</b> שלושה סאבים אחד על השני, עם חזית מיושרת. העליון והתחתון פונים קדימה, והאמצעי פונה אחורה. הדרייבר שלו נמצא בגב הערימה, במרחק של עומק התיבה מהדרייברים הקדמיים. הוא מקבל דיליי לפי המרחק הזה, ו-polarity הפוך, כמו ב-in-line. מאחור: כל סאב קדמי חלש ב-6 dB, ושניהם יחד מגיעים ל-0 dB, מול הסאב שפונה אחורה ב-0 dB, ולכן ביטול. מקדימה הוא נמצא כ-12 dB מתחת לזוג, ולכן מריחת הזמן קטנה. McCarthy: המרחק בין הדרייברים, כולל הדרך סביב התיבה, צריך לתת לפחות כ-3 ms, אחרת יש ביטול מקדימה מתחת ל-30 Hz. d&b (CSA): שלוש תיבות או כפולה של שלוש, והתיבה ההפוכה באמצע.</li>
-        <li><b>Gradient 3:1:</b> כמו FBF, אבל ארבע תיבות ואחת מהן הפוכה, כמו ב-L-Acoustics KS28. במודל התיבה ההפוכה מקבלת +3.5 dB כדי שהרמות מאחור יהיו שוות. זו הנחה של המודל, לא הערכים של היצרן.</li>
+        <li><b>Gradient FB:</b> שתי תיבות אחת על השנייה, אחת פונה אחורה. קיים כ-preset אצל Adamson (S-Series, E-Series), כשאין מקום או כשלא רוצים להסתיר את הבמה. במודל התיבה ההפוכה מקבלת gain נמוך ב-6 dB, כדי שהרמות מאחור יהיו שוות. זו הנחה של המודל, לא הערכים של Adamson.</li>
+        <li><b>Gradient 3:1:</b> ארבע תיבות, אחת הפוכה, בשיטת gradient, עם תוספת של 3.5 dB לתיבה ההפוכה. זו לא השיטה של L-Acoustics: לפי הניתוח של van Veen, ב-preset של SB18 הקדמיות מקבלות delay, ולתיבה ההפוכה אין היפוך polarity.</li>
         <li><b>End fire:</b> שורה של סאבים לעומק, בדרך כלל ארבעה במרווח של כ-1 m. כל סאב קדמי מקבל דיליי לפי המרחק מהאחורי, כך שכולם מגיעים יחד קדימה, ומאחור הם מגיעים "מפוזרים" ומתבטלים. McCarthy: לא עושים end fire עם שני סאבים.</li>
         <li><b>שורה של מערכים:</b> ב-Gradient וב-End fire אפשר להעמיד כמה מערכים זה לצד זה, במרווחים שווים, למשל שורה של זוגות in-line או שורה של ערימות FBF. McCarthy (11.9.5): סאבים לאורך הבמה מרווחים עד 2 m זה מזה.</li>
         <li><b>Left / Right:</b> אותה תצורה בשני צדי הבמה, לכל התצורות חוץ מ-Arc. במרכז שני הצדדים מגיעים יחד ומתחברים (power alley), ומחוץ למרכז הם מגיעים בזמנים שונים ויוצרים ביטולים לרוחב (combing). McCarthy (10.1.1.2): ככל ש-L ו-R רחוקים יותר, ה-alley צר יותר, והוא גם מצטמצם ככל שהתדר עולה.</li>
@@ -168,11 +172,11 @@ a{color:var(--accent)}
     <div>
       <h2>מה המודל לא מחשב, ומקורות</h2>
       <ul>
-        <li>כל סאב הוא מקור נקודתי כל-כיווני בשדה חופשי, בגובה האוזניים. חריג אחד: בערימות FBF ו-3:1 כל סאב חלש ב-6 dB מאחוריו, לפי החשבון של McCarthy (הדפוס 0.75 + 0.25·cos θ, באותה מידה בכל התדרים, לא דגם של יצרן). אצל היצרנים התיבה ההפוכה מקבלת גם עיבוד ייעודי (CSA ב-d&b, preset ‎_C‎ ב-L-Acoustics), שלא מחושב כאן. אין החזרה מהרצפה או מהבמה, אין קירות, ואין הסתרה בין סאבים.</li>
+        <li>כל סאב הוא מקור נקודתי כל-כיווני בשדה חופשי, בגובה האוזניים. חריג אחד: בערימות FB, ‏FBF ו-3:1 כל סאב חלש ב-6 dB מאחוריו, לפי החשבון של McCarthy (הדפוס 0.75 + 0.25·cos θ, באותה מידה בכל התדרים, לא דגם של יצרן). אצל היצרנים התיבה ההפוכה מקבלת גם עיבוד ייעודי (CSA ב-d&b, preset ‎_C‎ ב-L-Acoustics), שלא מחושב כאן. אין החזרה מהרצפה או מהבמה, אין קירות, ואין הסתרה בין סאבים.</li>
         <li>מהירות הקול: 343 m/s. פס רחב: ממוצע ב-dB של פסי 1/3 אוקטבה מ-31.5 עד 125 Hz.</li>
         <li>McCarthy, <i>Sound Systems: Design and Optimization</i>, מהדורה 3, פרק 10: סעיף 10.1 (polarity מול דיליי, איור 10.1), 10.1.1.2 (beam steering by delay ו-power alley), 10.1.2 (coupled point source, קשת), 10.2 (cardioid subwoofer arrays), 10.2.1 (end fire), 10.2.2 (gradient in-line), 10.2.3 (gradient inverted stack). פרק 14, נהלים 14.17–14.20 (כיוון פאזה של gradient ו-end fire).</li>
         <li>Merlijn van Veen, <a href="https://www.merlijnvanveen.nl/en/calculators/28-sad-subwoofer-array-designer-en" target="_blank" rel="noopener">S.A.D. Subwoofer Array Designer</a>: כלי ש-McCarthy ממליץ עליו בסעיף 10.1. ‏<a href="https://www.merlijnvanveen.nl/en/study-hall/161-moving-target" target="_blank" rel="noopener">Moving Target</a>: דיליי "מזיז" את הרמקול אחורה, וכ-3 ms לכל מטר.</li>
-        <li>d&amp;b, <a href="https://www.dbaudio.com/assets/products/downloads/ti/dbaudio-technical-information-ti-330-1.4-en.pdf" target="_blank" rel="noopener">TI 330 Cardioid Subwoofer Array</a>: מבנה CSA (שתיים קדימה, אחת אחורה באמצע). L-Acoustics, <a href="https://www.avc-group.com/assets/products/L-Acoustics/pdf/lacoustics-um-ks28.pdf" target="_blank" rel="noopener">KS28 owner's manual</a>, עמ' 20: ארבע תיבות, אחת הפוכה.</li>
+        <li>d&amp;b, <a href="https://www.dbaudio.com/assets/products/downloads/ti/dbaudio-technical-information-ti-330-1.4-en.pdf" target="_blank" rel="noopener">TI 330 Cardioid Subwoofer Array</a>: מבנה CSA (שתיים קדימה, אחת אחורה באמצע). L-Acoustics, <a href="https://www.avc-group.com/assets/products/L-Acoustics/pdf/lacoustics-um-ks28.pdf" target="_blank" rel="noopener">KS28 owner's manual</a>, עמ' 20: ארבע תיבות, אחת הפוכה. Adamson, <a href="https://www.manualslib.com/manual/1232045/Adamson-S-Series.html?page=10" target="_blank" rel="noopener">S-Series user manual</a>, עמ' 10: presets של FB, ‏FBF ו-EF66. Merlijn van Veen, <a href="https://www.merlijnvanveen.nl/en/study-hall/112-la-cardioid-deconstructed-pt-1" target="_blank" rel="noopener">LA cardioid deconstructed pt. 1</a>.</li>
         <li>המראה בהשראת תוכנות חיזוי כמו MAPP XT. זה לא כלי של Meyer Sound ולא מחליף תוכנת יצרן.</li>
       </ul>
     </div>
@@ -185,14 +189,16 @@ const $ = (id) => document.getElementById(id);
 const C = 343;
 const FREQS = []; for (let k = -24; k <= 12; k++) FREQS.push(+(100 * Math.pow(2, k / 12)).toFixed(1)); // 25 Hz .. 200 Hz, 1/12 oct
 const BANDS = [31.5, 40, 50, 63, 80, 100, 125];
-const st = { preset: "card", n: 1, sp: 1.0, ang: 60, arcT: "phys", cardT: "inline", sig: "tone", fi: FREQS.indexOf(63), foh: 20, subs: [], locked: true, lr: false, lrW: 14, m: 1, w: 1.2 };
+const st = { preset: "card", n: 1, sp: 1.0, ang: 60, arcT: "delay", fx: null, cardT: "inline", sig: "tone", fi: FREQS.indexOf(63), foh: 20, subs: [], locked: true, lr: false, lrW: 14, m: 1, w: 1.2 };
+const fHz = () => st.fx ?? FREQS[st.fi]; // an exact typed frequency overrides the slider step
 const AREA = { x0: -20, x1: 20, y0: -12, y1: 28 };
 
 // ---------- presets (McCarthy ch. 10) ----------
 const PRE = {
   single: { n: [1, 1, 1], sp: null, note: "סאב אחד: כמעט כל-כיווני, בלי חיבור ובלי ביטול." },
   card: { n: [1, 6, 1], sp: [0.3, 1.2, 1.0], nL: "ערימות לרוחב", spL: "מרווח קדמי-אחורי", note: "Gradient in-line: לכל זוג, הסאב האחורי מקבל דיליי של המרווח (כ-2.9 ms למטר) ו-polarity הפוך. McCarthy: עד 1 m." },
-  l31: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient 3:1\u2069, בהשראת \u2066L-Acoustics KS28\u2069: ארבע תיבות בכל ערימה, ואחת מהן פונה אחורה. מאחור שלוש תיבות קדמיות, כל אחת חלשה ב-6 dB, מול תיבה הפוכה אחת. כדי שהרמות מאחור יהיו שוות, היא מקבלת כאן \u2066+3.5 dB\u2069 (McCarthy, נוהל 14.18). זו הנחה של המודל: אצל L-Acoustics התיבה ההפוכה מקבלת preset ייעודי, \u2066[KS28_60_C]\u2069 או \u2066[KS28_100_C]\u2069, ואת הערכים שלו לא פירסמו במסמך שמצאתי." },
+  l31: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient 3:1\u2069: ארבע תיבות בכל ערימה, ואחת מהן פונה אחורה, בשיטת gradient: לתיבה ההפוכה delay של עומק התיבה, \u2066polarity\u2069 הפוך ו-\u2066+3.5 dB\u2069, כדי שהרמות מאחור יהיו שוות (McCarthy, נוהל 14.18). זו לא השיטה של \u2066L-Acoustics\u2069: לפי הניתוח של van Veen ל-preset \u2066[SB18_100_C]\u2069, התיבות הקדמיות מקבלות כ-5.5 ms ‏delay, ולתיבה ההפוכה אין היפוך \u2066polarity\u2069, רק notch. הוא מגדיר את זה כ-hybrid שקרוב יותר ל-end fire." },
+  fb: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient FB\u2069: שתי תיבות אחת על השנייה, עם חזית מיושרת, ואחת מהן פונה אחורה. לתיבה ההפוכה delay של עומק התיבה ו-\u2066polarity\u2069 הפוך. מאחור התיבה הקדמית חלשה ב-6 dB, ולכן התיבה ההפוכה מקבלת gain נמוך ב-6 dB, כדי ששתי ההגעות מאחור יהיו שוות. זו הנחה של המודל: אצל Adamson זה preset מוכן (FB), שה-delay וה-polarity בנויים בתוכו, והערכים לא פורסמו." },
   fbf: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066FBF (gradient inverted stack)\u2069: בכל ערימה שלושה סאבים אחד על השני, עם חזית מיושרת. האמצעי פונה אחורה, ולכן הדרייבר שלו בגב הערימה. הוא מקבל דיליי של עומק התיבה ו-polarity הפוך. מאחור \u20660 dB\u2069 מול \u20660 dB\u2069, ולכן ביטול. McCarthy: לפחות כ-3 ms." },
   end: { n: [2, 8, 4], sp: [0.5, 2.0, 1.0], nL: "סאבים לעומק", spL: "מרווח", note: "End fire: הסאב האחורי בלי דיליי, וכל סאב קדמי מקבל דיליי לפי המרחק שלו מהאחורי. McCarthy: בדרך כלל 4 סאבים במרווח של כ-1 m." },
   arc: { n: [2, 16, 8], sp: [0.6, 3.0, 1.2], nL: "סאבים", spL: "מרווח", note: "Arc: הסאבים על קשת. ב'קו ישר עם דיליי' הם בשורה, וכל סאב מקבל את הדיליי של המרחק שהיה לו מאחור על הקשת." },
@@ -206,6 +212,9 @@ function build() {
     for (let i = 0; i < m; i++) {
       const x = (i - (m - 1) / 2) * w;
       if (st.cardT === "inline") { add(x, 0, 1, 0, 1); add(x, -s, 1, d, -1); }
+      // FB (Adamson S/E-Series preset): two stacked, one reversed. Rear: the front box at -6 dB vs the reversed box at 0 dB,
+      // so the reversed one gets -6 dB to match the rear levels (McCarthy 10.2.3 / proc. 14.18). Model assumption: Adamson's preset values are not published.
+      if (st.cardT === "fb") { const g = "s" + i; add(x, 0, 1, 0, 1); add(x, -s, -1, d, -1); S[S.length - 1].gain = -6; S.slice(-2).forEach((o) => (o.stack = g)); }
       if (st.cardT === "fbf") { const g = "s" + i; add(x, 0, 1, 0, 1); add(x, -s, -1, d, -1); add(x, 0, 1, 0, 1); S.slice(-3).forEach((o) => (o.stack = g)); }
       // 3:1 (L-Acoustics KS28: four, one reversed). Rear: three fronts at -6 dB each = 1.5 vs the reversed one at 1.0,
       // so the reversed one gets +3.5 dB (20 log 1.5) to match the rear levels (McCarthy proc. 14.18). Model assumption, not the [KS28_xx_C] preset.
@@ -237,7 +246,7 @@ function build() {
 // ---------- physics: omni point sources, free field ----------
 // element pattern. omni: 1. FBF / 3:1 stack elements: 0.75 + 0.25 cos(theta) -> 0 dB front, -2.5 dB sides, -6 dB rear (McCarthy 10.2.3 uses -6 dB at the rear)
 function dirGain(s, dx, dy, r) {
-  if (!s.stack) return 1; // only the FBF / 3:1 stacks use the -6 dB rear pattern
+  if (!s.stack) return 1; // only the FB / FBF / 3:1 stacks use the -6 dB rear pattern
   const f = s.face === -1 ? -1 : 1, rot = s.rot || 0, ux = -Math.sin(rot) * f, uy = Math.cos(rot) * f;
   return 0.75 + 0.25 * ((dx * ux + dy * uy) / r);
 }
@@ -253,7 +262,7 @@ function field(px, py, f, subs = st.subs) {
 }
 const lines = (fc) => [-1, 0, 1].map((d) => fc * Math.pow(2, d / 9));
 function level(px, py, subs) {
-  if (st.sig === "tone") return 10 * Math.log10(field(px, py, FREQS[st.fi], subs).p + 1e-20);
+  if (st.sig === "tone") return 10 * Math.log10(field(px, py, fHz(), subs).p + 1e-20);
   let s = 0; for (const fc of BANDS) { let p = 0; for (const f of lines(fc)) p += field(px, py, f, subs).p / 3; s += 10 * Math.log10(p + 1e-20); }
   return s / BANDS.length;
 }
@@ -387,14 +396,14 @@ function drawFR() {
   p.textAlign = "center"; for (const f of [31.5, 40, 50, 63, 80, 100, 125, 160, 200]) { p.beginPath(); p.moveTo(gx(f), m.t); p.lineTo(gx(f), Hh - m.b); p.stroke(); p.fillText(String(f), gx(f), Hh - m.b + 16); }
   p.fillText("Hz", (m.l + W) / 2, Hh - 6);
   p.textAlign = "right"; for (let v = bot; v <= top; v += 6) { p.beginPath(); p.moveTo(m.l, gy(v)); p.lineTo(W - m.r, gy(v)); p.stroke(); p.fillText(String(v - top), m.l - 6, gy(v) + 4); }
-  if (st.sig === "tone") { p.fillStyle = "rgba(127,127,127,.2)"; const f = FREQS[st.fi]; p.fillRect(gx(f) - 2, m.t, 4, Hh - m.t - m.b); }
+  if (st.sig === "tone") { p.fillStyle = "rgba(127,127,127,.2)"; const f = fHz(); p.fillRect(gx(f) - 2, m.t, 4, Hh - m.t - m.b); }
   const curve = (arr, col, lw, dash) => { p.beginPath(); arr.forEach((v, k) => (k ? p.lineTo(gx(FF[k]), gy(v)) : p.moveTo(gx(FF[k]), gy(v)))); p.strokeStyle = col; p.lineWidth = lw; p.setLineDash(dash || []); p.stroke(); p.setLineDash([]); p.lineWidth = 1; };
   curve(o1, mu, 1.5, [5, 5]); curve(rr, wa, 2.5); curve(fr, ac, 3);
 }
 
 // ---------- readouts ----------
 function readouts() {
-  const c = centroid(), f = st.sig === "tone" ? FREQS[st.fi] : null;
+  const c = centroid(), f = st.sig === "tone" ? fHz() : null;
   const L = (dx, dy) => level(c[0] + dx, c[1] + dy);
   const front = L(0, 10), back = L(0, -10), side = Math.max(L(10, 0), L(-10, 0));
   $("cFB").textContent = (front - back >= 0 ? "+" : "") + (front - back).toFixed(1) + " dB";
@@ -436,7 +445,7 @@ $("tbl").addEventListener("click", (e) => {
 function pressed(ids, on) { ids.forEach((id) => $(id).setAttribute("aria-pressed", id === on)); }
 function syncUI() {
   const P = PRE[st.preset];
-  pressed(["pSingle", "pCard", "pFbf", "p31", "pEnd", "pArc"], st.preset === "card" ? { inline: "pCard", fbf: "pFbf", l31: "p31" }[st.cardT] : { single: "pSingle", end: "pEnd", arc: "pArc" }[st.preset]);
+  pressed(["pSingle", "pCard", "pFb", "pFbf", "p31", "pEnd", "pArc"], st.preset === "card" ? { inline: "pCard", fb: "pFb", fbf: "pFbf", l31: "p31" }[st.cardT] : { single: "pSingle", end: "pEnd", arc: "pArc" }[st.preset]);
   $("lockBtn").setAttribute("aria-pressed", st.locked); $("lockT").textContent = st.locked ? "נעול" : "פתוח להזזה";
   $("shackle").setAttribute("d", st.locked ? "M8 11V7a4 4 0 0 1 8 0v4" : "M8 11V7a4 4 0 0 1 7.7-1.5");
   $("lockBtn").setAttribute("aria-label", st.locked ? "הסאבים נעולים במיקום של התצורה. לחצו כדי לפתוח ולהזיז ידנית" : "הזזה ידנית פתוחה. לחצו כדי לנעול");
@@ -459,7 +468,7 @@ function syncUI() {
   if (P.nL) { $("nL").textContent = P.nL; $("spL").textContent = st.preset === "card" && st.cardT !== "inline" ? PRE[st.cardT].spL : P.spL; $("n").min = P.n[0]; $("n").max = P.n[1]; $("sp").min = P.sp[0]; $("sp").max = P.sp[1]; }
   $("n").value = st.n; $("nO").textContent = st.n; $("sp").value = st.sp; $("spO").textContent = st.sp.toFixed(2) + " m";
   $("ang").value = st.ang; $("angO").textContent = st.ang + "°"; $("arcT").value = st.arcT;
-  $("f").value = st.fi; $("fO").textContent = FREQS[st.fi] + " Hz"; $("rowF").hidden = st.sig !== "tone";
+  $("f").value = st.fi; $("fO").textContent = +fHz().toFixed(1) + " Hz"; $("rowF").hidden = st.sig !== "tone";
   $("foh").value = st.foh; $("fohO").textContent = st.foh + " m";
   $("presetNote").textContent = (st.preset === "card" && st.cardT !== "inline" ? PRE[st.cardT].note : P.note) + (st.preset === "end" && st.n > 1 ? ` דיליי לכל צעד: ${(st.sp / C * 1000).toFixed(2)} ms.` : "") + (st.preset === "card" ? ` כאן: ${(st.sp / C * 1000).toFixed(2)} ms.` : "");
   $("viewHint").textContent = st.locked ? "הבמה למעלה, הקהל למטה. 0 dB = הרמה ב-FOH. הסאבים במיקום של התצורה." : "הבמה למעלה, הקהל למטה. 0 dB = הרמה ב-FOH. גררו סאב או ערימה כדי להזיז.";
@@ -474,6 +483,7 @@ function update() { clearTimeout(fine); fine = setTimeout(() => render(false), 1
 const regen = () => { build(); table(); update(); };
 $("pSingle").onclick = () => { applyPreset("single"); update(); };
 $("pCard").onclick = () => { st.cardT = "inline"; applyPreset("card"); update(); };
+$("pFb").onclick = () => { st.cardT = "fb"; applyPreset("card"); update(); };
 $("pFbf").onclick = () => { st.cardT = "fbf"; applyPreset("card"); update(); };
 $("p31").onclick = () => { st.cardT = "l31"; applyPreset("card"); update(); };
 $("pEnd").onclick = () => { applyPreset("end"); update(); };
@@ -487,10 +497,41 @@ $("arcT").onchange = (e) => { st.arcT = e.target.value; regen(); };
 $("mC").onclick = () => { st.lr = false; regen(); };
 $("mLR").onclick = () => { st.lr = true; regen(); };
 $("lr").oninput = (e) => { st.lrW = +e.target.value; regen(); };
-$("f").oninput = (e) => { st.fi = +e.target.value; update(); };
+$("f").oninput = (e) => { st.fi = +e.target.value; st.fx = null; update(); };
 $("foh").oninput = (e) => { st.foh = +e.target.value; update(); };
 $("sTone").onclick = () => { st.sig = "tone"; update(); };
 $("sBand").onclick = () => { st.sig = "band"; update(); };
+// double tap / double click on a slider value: type an exact number (phone shows a numeric keypad)
+const KEY = { n: "n", sp: "sp", m: "m", w: "w", ang: "ang", lr: "lrW", foh: "foh", f: "fx" };
+function editValue(out) {
+  const rng = out.parentElement.querySelector('input[type="range"]'); if (!rng || out.dataset.editing) return;
+  const id = rng.id, key = KEY[id]; if (!key) return;
+  const lo = id === "f" ? 20 : +rng.min, hi = id === "f" ? 250 : +rng.max, isInt = id === "n" || id === "m";
+  const cur = id === "f" ? fHz() : st[key];
+  out.dataset.editing = "1"; const keep = out.textContent; out.textContent = "";
+  const inp = document.createElement("input");
+  inp.type = "text"; inp.inputMode = isInt ? "numeric" : "decimal"; inp.className = "typed"; inp.value = String(+(+cur).toFixed(2));
+  inp.setAttribute("aria-label", `ערך מדויק, ${lo} עד ${hi}`); out.appendChild(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = (ok) => {
+    if (done) return; done = true; delete out.dataset.editing; out.textContent = keep;
+    const v = parseFloat(inp.value.replace(",", "."));
+    if (ok && isFinite(v)) {
+      let x = Math.min(hi, Math.max(lo, v)); if (isInt) x = Math.round(x); else x = +x.toFixed(2);
+      st[key] = x;
+      if (id === "f") { let bi = 0; FREQS.forEach((q, k) => { if (Math.abs(Math.log(q / x)) < Math.abs(Math.log(FREQS[bi] / x))) bi = k; }); st.fi = bi; }
+      if (id === "foh") update(); else regen();
+    } else update();
+  };
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); finish(true); inp.blur(); } if (e.key === "Escape") finish(false); });
+  inp.addEventListener("blur", () => finish(true));
+}
+document.querySelectorAll(".r output[id]").forEach((out) => {
+  out.title = "לחיצה כפולה להקלדת ערך";
+  out.addEventListener("dblclick", () => editValue(out));
+  let last = 0; // phones: detect the double tap ourselves
+  out.addEventListener("pointerup", (e) => { if (e.pointerType === "mouse") return; const now = Date.now(); if (now - last < 400) { e.preventDefault(); editValue(out); last = 0; } else last = now; });
+});
 $("lockBtn").onclick = () => { st.locked = !st.locked; table(); update(); };
 // pointer: drag a sub (or a whole stack) when unlocked
 let drag = null;
