@@ -76,8 +76,15 @@ td .mute.on{background:var(--muted);color:var(--panel)}
 .keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 12px 10px;font:12px var(--f-mono);color:var(--scope-muted)}
 .keys i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-inline-end:5px}
 .note{font-size:13px;color:var(--muted);margin:0}
-.text{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px}
-.text h2{font:500 18px var(--f-display);margin:0 0 6px}
+.text{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px;align-items:start}
+.fold{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.fold summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary::before{content:"+";flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);display:grid;place-items:center;font:600 18px/1 var(--f-mono)}
+.fold[open] summary::before{content:"−"}
+.fold summary h2{margin:0}
+.fold[open] summary{margin-bottom:8px}
+.text h2{font:500 18px var(--f-display);margin:0 0 6px;display:inline}
 .text ul{margin:0;padding-inline-start:18px;font-size:14px;color:var(--muted)}
 .text li{margin-bottom:4px}
 a{color:var(--accent)}
@@ -155,8 +162,8 @@ a{color:var(--accent)}
   </div>
 
   <section class="text">
-    <div>
-      <h2>מה רואים</h2>
+    <details class="fold">
+      <summary><h2>מה רואים</h2></summary>
       <ul>
         <li><b>Polarity מול דיליי:</b> היפוך polarity נותן הפרש של 180° בכל התדרים. דיליי נותן הפרש פאזה שמשתנה עם התדר. אותם 8 ms מטים את האלומה ב-31 Hz, מבטלים ב-63 Hz ומתחברים שוב ב-125 Hz.</li>
         <li><b>Cardioid (gradient in-line):</b> שני סאבים שפונים קדימה, במרחק של עד 1 m. הסאב האחורי מקבל דיליי שווה למרחק, ו-polarity הפוך. מאחור הם מגיעים יחד ומתבטלים. מקדימה החיבור תלוי בתדר, ולכן היעילות קדימה פחותה מ-6 dB.</li>
@@ -168,9 +175,9 @@ a{color:var(--accent)}
         <li><b>Left / Right:</b> אותה תצורה בשני צדי הבמה, לכל התצורות חוץ מ-Arc. במרכז שני הצדדים מגיעים יחד ומתחברים (power alley), ומחוץ למרכז הם מגיעים בזמנים שונים ויוצרים ביטולים לרוחב (combing). McCarthy (10.1.1.2): ככל ש-L ו-R רחוקים יותר, ה-alley צר יותר, והוא גם מצטמצם ככל שהתדר עולה.</li>
         <li><b>Arc:</b> קשת פיזית, או קו ישר עם דיליי שמחקה קשת, פותחת את הכיסוי לרוחב ומחלישה את ה-power alley במרכז. ב-0° זה קו ישר: אלומה צרה שמצטמצמת עם התדר.</li>
       </ul>
-    </div>
-    <div>
-      <h2>מה המודל לא מחשב, ומקורות</h2>
+    </details>
+    <details class="fold">
+      <summary><h2>מה המודל לא מחשב, ומקורות</h2></summary>
       <ul>
         <li>כל סאב הוא מקור נקודתי כל-כיווני בשדה חופשי, בגובה האוזניים. חריג אחד: בערימות FB, ‏FBF ו-3:1 כל סאב חלש ב-6 dB מאחוריו, לפי החשבון של McCarthy (הדפוס 0.75 + 0.25·cos θ, באותה מידה בכל התדרים, לא דגם של יצרן). אצל היצרנים התיבה ההפוכה מקבלת גם עיבוד ייעודי (CSA ב-d&b, preset ‎_C‎ ב-L-Acoustics), שלא מחושב כאן. אין החזרה מהרצפה או מהבמה, אין קירות, ואין הסתרה בין סאבים.</li>
         <li>מהירות הקול: 343 m/s. פס רחב: ממוצע ב-dB של פסי 1/3 אוקטבה מ-31.5 עד 125 Hz.</li>
@@ -179,7 +186,7 @@ a{color:var(--accent)}
         <li>d&amp;b, <a href="https://www.dbaudio.com/assets/products/downloads/ti/dbaudio-technical-information-ti-330-1.4-en.pdf" target="_blank" rel="noopener">TI 330 Cardioid Subwoofer Array</a>: מבנה CSA (שתיים קדימה, אחת אחורה באמצע). L-Acoustics, <a href="https://www.avc-group.com/assets/products/L-Acoustics/pdf/lacoustics-um-ks28.pdf" target="_blank" rel="noopener">KS28 owner's manual</a>, עמ' 20: ארבע תיבות, אחת הפוכה. Adamson, <a href="https://www.manualslib.com/manual/1232045/Adamson-S-Series.html?page=10" target="_blank" rel="noopener">S-Series user manual</a>, עמ' 10: presets של FB, ‏FBF ו-EF66. Merlijn van Veen, <a href="https://www.merlijnvanveen.nl/en/study-hall/112-la-cardioid-deconstructed-pt-1" target="_blank" rel="noopener">LA cardioid deconstructed pt. 1</a>.</li>
         <li>המראה בהשראת תוכנות חיזוי כמו MAPP XT. זה לא כלי של Meyer Sound ולא מחליף תוכנת יצרן.</li>
       </ul>
-    </div>
+    </details>
   </section>
 </div>
 
