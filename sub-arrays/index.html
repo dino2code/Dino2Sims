@@ -52,27 +52,41 @@ td input:disabled{opacity:.55;cursor:not-allowed}
 .r{display:grid;grid-template-columns:130px minmax(0,1fr) 76px;gap:10px;align-items:center}
 @media (max-width:460px){.r{grid-template-columns:minmax(0,1fr) 70px}.r input[type=range],.r select{grid-column:1/-1}}
 .r label{font-size:14px;color:var(--muted)}
+.r.inl input[type=range]{grid-column:2/-1}
+.r.inl output{display:inline;color:var(--fg)}
+@media (max-width:460px){.r.inl label,.r.inl input[type=range],.r .seg{grid-column:1/-1}}
 .r output{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:left}
 .r output[id]{cursor:text;text-decoration:underline dotted var(--muted);text-underline-offset:4px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .r .typed{width:100%;font:500 16px var(--f-mono);direction:ltr;text-align:left;background:var(--bg);color:var(--fg);border:1px solid var(--accent);border-radius:6px;padding:4px 6px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select{font:14px var(--f-body);padding:5px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
-.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
 .chip b{display:block;font:500 22px var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
 .chip span{font-size:13px;color:var(--muted)}
-.tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
-th{font:600 12px var(--f-body);color:var(--muted);text-align:start;padding:5px 6px;border-bottom:1px solid var(--line)}
-td{padding:4px 6px;border-bottom:1px solid var(--line)}
-td input[type=number]{width:72px;font:14px var(--f-mono);padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);direction:ltr}
-td .pol{min-width:40px;font:600 16px var(--f-mono);padding:3px 8px}
+.tbl{overflow-x:visible}
+table{border-collapse:collapse;width:100%;font-size:14px;table-layout:fixed}
+col.c-n{width:20px} col.c-btn{width:40px}
+@media (max-width:440px){col.c-n{width:16px} col.c-btn{width:30px} td{padding:4px 1px} th{padding:5px 1px;font-size:11px} td input[type=number]{font-size:12px;padding:4px 1px;text-align:center} td select{font-size:12px} .subsP{padding-inline:10px}}
+th{font:600 12px var(--f-body);color:var(--muted);text-align:start;padding:5px 3px;border-bottom:1px solid var(--line);vertical-align:bottom}
+th small{display:block;font:400 11px var(--f-mono)}
+td{padding:4px 3px;border-bottom:1px solid var(--line)}
+td input[type=number]{width:100%;min-width:0;max-width:90px;font:13px var(--f-mono);padding:4px 3px;-moz-appearance:textfield;appearance:textfield;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);direction:ltr}
+td .pol{width:100%;min-width:0;font:600 16px var(--f-mono);padding:3px 0}
+td input::-webkit-inner-spin-button,td input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+td select{width:100%;min-width:0;font:13px var(--f-body);padding:3px 1px}
 td .pol.neg{border-color:var(--warn);color:var(--warn)}
 .warnNote{border-inline-start:3px solid var(--warn);padding-inline-start:10px;color:var(--fg)}
-td .mute{min-width:40px;padding:3px 8px}
+td .mute{width:100%;min-width:0;padding:3px 0}
 td .mute.on{background:var(--muted);color:var(--panel)}
 .graphs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px}
 .graphs h3{font:500 15px var(--f-display);margin:0;padding:10px 12px 0}
+.graphs{align-items:start}
+.gfold summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:0 12px 10px 0}
+.gfold summary::-webkit-details-marker{display:none}
+.gfold summary::before{content:"+";flex:none;margin-top:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);display:grid;place-items:center;font:600 18px/1 var(--f-mono)}
+.gfold[open] summary::before{content:"−"}
+.gfold summary h3{padding:10px 0 0}
 .keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 12px 10px;font:12px var(--f-mono);color:var(--scope-muted)}
 .keys i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-inline-end:5px}
 .note{font-size:13px;color:var(--muted);margin:0}
@@ -84,6 +98,8 @@ td .mute.on{background:var(--muted);color:var(--panel)}
 .fold[open] summary::before{content:"−"}
 .fold summary h2{margin:0}
 .fold[open] summary{margin-bottom:8px}
+.tnote{margin-top:12px}
+.tnote h2{font:500 15px var(--f-display)}
 .text h2{font:500 18px var(--f-display);margin:0 0 6px;display:inline}
 .text ul{margin:0;padding-inline-start:18px;font-size:14px;color:var(--muted)}
 .text li{margin-bottom:4px}
@@ -98,45 +114,54 @@ a{color:var(--accent)}
     <div>
       <div class="eyebrow">Fig 5 · Subwoofer arrays · 2D</div>
       <h1>Sub Array Lab</h1>
-      <p>מפת רמות של מערכי סאבים, במבט מלמעלה. בחרו תצורה, תדר, דיליי ו-polarity לכל סאב, וראו איפה הסאונד מתחבר (coupling) ואיפה הוא מתבטל.</p>
+      <p>מפת עוצמות של מערכי סאבים, במבט מלמעלה. בחרו תצורה, תדר, דיליי ו-polarity לכל סאב, וראו איפה הסאונד מתחבר (coupling) ואיפה הוא מתבטל.</p>
     </div>
     <button class="btn" id="themeBtn">מצב בהיר</button>
   </header>
 
-  <div class="chips">
-    <div class="chip"><b id="cFB">–</b><span>Front/Back: רמה 10 m קדימה מול 10 m אחורה</span></div>
-    <div class="chip"><b id="cEff">–</b><span>יעילות קדימה: מול חיבור מושלם של כל הסאבים</span></div>
-    <div class="chip"><b id="cSide">–</b><span>צד (90°) ביחס לקדימה, ב-10 m</span></div>
-    <div class="chip"><b id="cLam">–</b><span id="cLamT">אורך גל</span></div>
-  </div>
 
   <div class="main">
     <section class="scope">
       <div class="bar" dir="rtl">
         <button class="btn lock" id="lockBtn" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path id="shackle" d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="lockT">נעול</span></button>
-        <span class="hint" id="viewHint">הבמה למעלה, הקהל למטה. 0 dB = הרמה ב-FOH.</span>
+        <span class="hint" id="viewHint">הבמה למעלה, הקהל למטה. <bdi dir="ltr">0 dB</bdi> = העוצמה ב-<bdi dir="ltr">FOH</bdi>.</span>
       </div>
-      <canvas id="view" width="900" height="900" aria-label="מפת רמות של מערך הסאבים"></canvas>
+      <canvas id="view" width="900" height="900" aria-label="מפת עוצמות של מערך הסאבים"></canvas>
     </section>
 
     <div style="display:grid;gap:16px;min-width:0">
       <section class="panel">
         <h2>תצורה</h2>
         <div class="seg" role="group" aria-label="תצורה">
-          <button id="pSingle" aria-pressed="false">סאב אחד</button><button id="pEnd" aria-pressed="false">End fire</button><button id="pCard" aria-pressed="true">Gradient in-line</button><button id="pFb" aria-pressed="false">Gradient FB</button><button id="pFbf" aria-pressed="false">Gradient FBF</button><button id="p31" aria-pressed="false">Gradient 3:1</button><button id="pArc" aria-pressed="false">Arc</button>
+          <button id="pSingle" aria-pressed="false">Single</button><button id="pEnd" aria-pressed="false">End fire</button><button id="pCard" aria-pressed="true">Gradient in-line</button><button id="pFb" aria-pressed="false">Gradient FB</button><button id="pFbf" aria-pressed="false">Gradient FBF</button><button id="p31" aria-pressed="false">Gradient 3:1</button><button id="pArc" aria-pressed="false">Arc</button>
         </div>
-        <div class="r" id="rowN"><label for="n" id="nL">מספר</label><input type="range" id="n" min="1" max="16" step="1"><output id="nO"></output></div>
+        <div class="r inl" id="rowN"><label for="n"><span id="nL">מספר</span>: <output id="nO"></output></label><input type="range" id="n" min="1" max="16" step="1"></div>
         <div class="r" id="rowSp"><label for="sp" id="spL">מרווח</label><input type="range" id="sp" min="0.3" max="3" step="0.05"><output id="spO"></output></div>
-        <div class="r" id="rowM"><label for="m" id="mL">מערכים בשורה</label><input type="range" id="m" min="1" max="8" step="1"><output id="mO"></output></div>
+        <div class="r inl" id="rowM"><label for="m"><span id="mL">מערכים בשורה</span>: <output id="mO"></output></label><input type="range" id="m" min="1" max="8" step="1"></div>
         <div class="r" id="rowW"><label for="w">מרווח בין המערכים</label><input type="range" id="w" min="0.6" max="3" step="0.05"><output id="wO"></output></div>
         <div class="r" id="rowAng"><label for="ang">זווית הקשת</label><input type="range" id="ang" min="0" max="140" step="5"><output id="angO"></output></div>
         <div class="r" id="rowArcT"><label for="arcT">סוג קשת</label><select id="arcT"><option value="delay">קו ישר עם דיליי (Arc delay)</option><option value="phys">קשת פיזית</option></select><output></output></div>
         <div class="r" id="rowLoc"><label>מיקום</label><div class="seg" role="group" aria-label="מיקום"><button id="mC" aria-pressed="true">מרכז</button><button id="mLR" aria-pressed="false">Left / Right</button></div><output></output></div>
         <div class="r" id="rowLR"><label for="lr">מרחק בין L ל-R</label><input type="range" id="lr" min="6" max="30" step="1"><output id="lrO"></output></div>
-        <p class="note">לחיצה כפולה על מספר ליד מחוון פותחת הקלדה של ערך מדויק. במרווחים אפשר להקליד גם מעבר לקצה המחוון, והמפה גדלה בהתאם.</p>
         <p class="note" id="presetNote"></p>
         <p class="note warnNote" id="warnNote" hidden></p>
       </section>
+      <section class="panel subsP">
+        <h2>הסאבים</h2>
+        <div class="tbl"><table id="tbl">
+          <colgroup><col class="c-n"><col><col><col class="c-btn"><col><col class="c-btn"><col><col class="c-btn"></colgroup>
+          <thead><tr><th>#</th><th>X<small>m</small></th><th>Y<small>m</small></th><th>כיוון</th><th>Delay<small>ms</small></th><th>Pol</th><th>Gain<small>dB</small></th><th>Mute</th></tr></thead><tbody></tbody>
+        </table></div>
+        <details class="fold tnote"><summary><h2>הסבר על הטבלה</h2></summary>
+          <p class="note">X לרוחב הבמה, Y לעומק: ערך חיובי הוא לכיוון הקהל. בעמודת הכיוון, ↓ פירושו שהסאב פונה קדימה לקהל, ו-↑ שהוא פונה אחורה לבמה. לחיצה מחליפה כיוון. כל שינוי בטבלה מחושב מיד. הכיוון משמש לציור בלבד, חוץ מבערימות. ב-FB, ‏FBF ו-3:1 כל ערימה היא שניים עד ארבעה סאבים: X ו-Y בטבלה הם מיקום הדרייבר, ולכן הסאב שפונה אחורה נמצא בגב הערימה. המיקומים נעולים לפי התצורה. כדי להזיז סאב או ערימה, ידנית בטבלה או בגרירה על המפה, לחצו על המנעול שמעל המפה. כל שינוי בתצורה מחזיר את המיקומים האוטומטיים.</p>
+        </details>
+      </section>
+      <div class="chips">
+        <div class="chip"><b id="cFB">–</b><span>יחס קדימה/אחורה (<bdi dir="ltr">Front/Back</bdi>): עוצמה מקדימה <bdi dir="ltr">10 m</bdi> מול עוצמה מאחור <bdi dir="ltr">10 m</bdi></span></div>
+        <div class="chip"><b id="cEff">–</b><span>יעילות מקדימה: מול חיבור מושלם של כל הסאבים</span></div>
+        <div class="chip"><b id="cSide">–</b><span>עוצמה בצד <bdi dir="ltr">(90°)</bdi> מול עוצמה מקדימה, במרחק <bdi dir="ltr">10 m</bdi></span></div>
+        <div class="chip"><b id="cLam">–</b><span id="cLamT">אורך גל</span></div>
+      </div>
       <section class="panel">
         <h2>אות</h2>
         <div class="seg" role="group" aria-label="אות"><button id="sTone" aria-pressed="true">תדר בודד</button><button id="sBand" aria-pressed="false">פס רחב 31.5–125 Hz</button></div>
@@ -146,19 +171,12 @@ a{color:var(--accent)}
     </div>
   </div>
 
-  <section class="panel">
-    <h2>הסאבים</h2>
-    <div class="tbl"><table id="tbl">
-      <thead><tr><th>#</th><th>X (m)</th><th>Y (m)</th><th>כיוון</th><th>Delay (ms)</th><th>Polarity</th><th>Gain (dB)</th><th>Mute</th></tr></thead><tbody></tbody>
-    </table></div>
-    <p class="note">X לרוחב הבמה, Y לעומק: ערך חיובי הוא לכיוון הקהל. כל שינוי בטבלה מחושב מיד. הכיוון משמש לציור בלבד, חוץ מבערימות. ב-FB, ‏FBF ו-3:1 כל ערימה היא שניים עד ארבעה סאבים: X ו-Y בטבלה הם מיקום הדרייבר, ולכן הסאב שפונה אחורה נמצא בגב הערימה. המיקומים נעולים לפי התצורה. כדי להזיז סאב או ערימה, ידנית בטבלה או בגרירה על המפה, לחצו על המנעול שמעל המפה. כל שינוי בתצורה מחזיר את המיקומים האוטומטיים.</p>
-  </section>
 
   <div class="graphs">
-    <section class="scope"><h3>Polar ב-10 m</h3><canvas id="polar" width="700" height="460"></canvas>
-      <div class="keys" dir="rtl"><span><i style="background:var(--accent)"></i>רמה ביחס לכיוון החזק</span><span>טבעות כל 6 dB</span></div></section>
-    <section class="scope"><h3>רמה לפי תדר: 10 m קדימה ו-10 m אחורה</h3><canvas id="fr" width="700" height="460"></canvas>
-      <div class="keys" dir="rtl"><span><i style="background:var(--accent)"></i>קדימה</span><span><i style="background:var(--warn)"></i>אחורה</span><span><i style="background:var(--scope-muted)"></i>סאב אחד, להשוואה</span></div></section>
+    <details class="scope gfold"><summary><h3><bdi dir="ltr">Polar pattern</bdi> במרחק <bdi dir="ltr">10 m</bdi></h3></summary><canvas id="polar" width="700" height="460"></canvas>
+      <div class="keys" dir="rtl"><span><i style="background:var(--accent)"></i>עוצמה ביחס לכיוון החזק</span><span>טבעות כל <bdi dir="ltr">6 dB</bdi></span></div></details>
+    <details class="scope gfold"><summary><h3>עוצמה לפי תדר: מקדימה <bdi dir="ltr">10 m</bdi> ומאחור <bdi dir="ltr">10 m</bdi></h3></summary><canvas id="fr" width="700" height="460"></canvas>
+      <div class="keys" dir="rtl"><span><i style="background:var(--accent)"></i>מקדימה</span><span><i style="background:var(--warn)"></i>מאחור</span><span><i style="background:var(--scope-muted)"></i>סאב אחד, להשוואה</span></div></details>
   </div>
 
   <section class="text">
@@ -168,7 +186,7 @@ a{color:var(--accent)}
         <li><b>Polarity מול דיליי:</b> היפוך polarity נותן הפרש של 180° בכל התדרים. דיליי נותן הפרש פאזה שמשתנה עם התדר. אותם 8 ms מטים את האלומה ב-31 Hz, מבטלים ב-63 Hz ומתחברים שוב ב-125 Hz.</li>
         <li><b>Cardioid (gradient in-line):</b> שני סאבים שפונים קדימה, במרחק של עד 1 m. הסאב האחורי מקבל דיליי שווה למרחק, ו-polarity הפוך. מאחור הם מגיעים יחד ומתבטלים. מקדימה החיבור תלוי בתדר, ולכן היעילות קדימה פחותה מ-6 dB.</li>
         <li><b>Cardioid FBF (gradient inverted stack):</b> שלושה סאבים אחד על השני, עם חזית מיושרת. העליון והתחתון פונים קדימה, והאמצעי פונה אחורה. הדרייבר שלו נמצא בגב הערימה, במרחק של עומק התיבה מהדרייברים הקדמיים. הוא מקבל דיליי לפי המרחק הזה, ו-polarity הפוך, כמו ב-in-line. מאחור: כל סאב קדמי חלש ב-6 dB, ושניהם יחד מגיעים ל-0 dB, מול הסאב שפונה אחורה ב-0 dB, ולכן ביטול. מקדימה הוא נמצא כ-12 dB מתחת לזוג, ולכן מריחת הזמן קטנה. McCarthy: המרחק בין הדרייברים, כולל הדרך סביב התיבה, צריך לתת לפחות כ-3 ms, אחרת יש ביטול מקדימה מתחת ל-30 Hz. d&b (CSA): שלוש תיבות או כפולה של שלוש, והתיבה ההפוכה באמצע.</li>
-        <li><b>Gradient FB:</b> שתי תיבות אחת על השנייה, אחת פונה אחורה. קיים כ-preset אצל Adamson (S-Series, E-Series), כשאין מקום או כשלא רוצים להסתיר את הבמה. במודל התיבה ההפוכה מקבלת gain נמוך ב-6 dB, כדי שהרמות מאחור יהיו שוות. זו הנחה של המודל, לא הערכים של Adamson.</li>
+        <li><b>Gradient FB:</b> שתי תיבות אחת על השנייה, אחת פונה אחורה. קיים כ-preset אצל Adamson (S-Series, E-Series), כשאין מקום או כשלא רוצים להסתיר את הבמה. במודל התיבה ההפוכה מקבלת gain נמוך ב-6 dB, כדי שהעוצמות מאחור יהיו שוות. זו הנחה של המודל, לא הערכים של Adamson.</li>
         <li><b>Gradient 3:1:</b> ארבע תיבות, אחת הפוכה, בשיטת gradient, עם תוספת של 3.5 dB לתיבה ההפוכה. זו לא השיטה של L-Acoustics: לפי הניתוח של van Veen, ב-preset של SB18 הקדמיות מקבלות delay, ולתיבה ההפוכה אין היפוך polarity.</li>
         <li><b>End fire:</b> שורה של סאבים לעומק, בדרך כלל ארבעה במרווח של כ-1 m. כל סאב קדמי מקבל דיליי לפי המרחק מהאחורי, כך שכולם מגיעים יחד קדימה, ומאחור הם מגיעים "מפוזרים" ומתבטלים. McCarthy: לא עושים end fire עם שני סאבים.</li>
         <li><b>שורה של מערכים:</b> ב-Gradient וב-End fire אפשר להעמיד כמה מערכים זה לצד זה, במרווחים שווים, למשל שורה של זוגות in-line או שורה של ערימות FBF. McCarthy (11.9.5): סאבים לאורך הבמה מרווחים עד 2 m זה מזה.</li>
@@ -211,9 +229,9 @@ const AS = () => (AREA.x1 - AREA.x0) / 40; // map scale relative to the default
 
 // ---------- presets (McCarthy ch. 10) ----------
 const PRE = {
-  single: { n: [1, 1, 1], sp: null, note: "סאב אחד: כמעט כל-כיווני, בלי חיבור ובלי ביטול." },
+  single: { n: [1, 1, 1], sp: null, note: "⁦Single⁩: סאב אחד, כמעט כל-כיווני, בלי חיבור ובלי ביטול." },
   card: { n: [1, 6, 1], sp: [0.3, 1.2, 1.0], nL: "ערימות לרוחב", spL: "מרווח קדמי-אחורי", note: "Gradient in-line: לכל זוג, הסאב האחורי מקבל דיליי של המרווח (כ-2.9 ms למטר) ו-polarity הפוך. McCarthy: עד 1 m." },
-  l31: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient 3:1\u2069: ארבע תיבות בכל ערימה, ואחת מהן פונה אחורה, בשיטת gradient: לתיבה ההפוכה delay של עומק התיבה, \u2066polarity\u2069 הפוך ו-\u2066+3.5 dB\u2069, כדי שהרמות מאחור יהיו שוות (McCarthy, נוהל 14.18). זו לא השיטה של \u2066L-Acoustics\u2069: לפי הניתוח של van Veen ל-preset \u2066[SB18_100_C]\u2069, התיבות הקדמיות מקבלות כ-5.5 ms ‏delay, ולתיבה ההפוכה אין היפוך \u2066polarity\u2069, רק notch. הוא מגדיר את זה כ-hybrid שקרוב יותר ל-end fire." },
+  l31: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient 3:1\u2069: ארבע תיבות בכל ערימה, ואחת מהן פונה אחורה, בשיטת gradient: לתיבה ההפוכה delay של עומק התיבה, \u2066polarity\u2069 הפוך ו-\u2066+3.5 dB\u2069, כדי שהעוצמות מאחור יהיו שוות (McCarthy, נוהל 14.18). זו לא השיטה של \u2066L-Acoustics\u2069: לפי הניתוח של van Veen ל-preset \u2066[SB18_100_C]\u2069, התיבות הקדמיות מקבלות כ-5.5 ms ‏delay, ולתיבה ההפוכה אין היפוך \u2066polarity\u2069, רק notch. הוא מגדיר את זה כ-hybrid שקרוב יותר ל-end fire." },
   fb: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066Gradient FB\u2069: שתי תיבות אחת על השנייה, עם חזית מיושרת, ואחת מהן פונה אחורה. לתיבה ההפוכה delay של עומק התיבה ו-\u2066polarity\u2069 הפוך. מאחור התיבה הקדמית חלשה ב-6 dB, ולכן התיבה ההפוכה מקבלת gain נמוך ב-6 dB, כדי ששתי ההגעות מאחור יהיו שוות. זו הנחה של המודל: אצל Adamson זה preset מוכן (FB), שה-delay וה-polarity בנויים בתוכו, והערכים לא פורסמו." },
   fbf: { spL: "עומק התיבה (בין הדרייברים)", note: "\u2066FBF (gradient inverted stack)\u2069: בכל ערימה שלושה סאבים אחד על השני, עם חזית מיושרת. האמצעי פונה אחורה, ולכן הדרייבר שלו בגב הערימה. הוא מקבל דיליי של עומק התיבה ו-polarity הפוך. מאחור \u20660 dB\u2069 מול \u20660 dB\u2069, ולכן ביטול. McCarthy: לפחות כ-3 ms." },
   end: { n: [2, 8, 4], sp: [0.5, 2.0, 1.0], nL: "סאבים לעומק", spL: "מרווח", note: "End fire: הסאב האחורי בלי דיליי, וכל סאב קדמי מקבל דיליי לפי המרחק שלו מהאחורי. McCarthy: בדרך כלל 4 סאבים במרווח של כ-1 m." },
@@ -350,7 +368,7 @@ function draw2d() {
     if (!s.stack || done.has(s.stack)) return; done.add(s.stack);
     const mem = st.subs.map((o, j) => [o, j]).filter(([o]) => o.stack === s.stack);
     const xs = mem.map(([o]) => o.x), ys = mem.map(([o]) => o.y);
-    const cx = X(xs.reduce((a, b) => a + b, 0) / xs.length), y0 = Yp(Math.min(...ys)), y1 = Yp(Math.max(...ys)), w = Math.max(1.1 * M, 14 * FS()), h = Math.max(y1 - y0, 6);
+    const cx = X(xs.reduce((a, b) => a + b, 0) / xs.length), y0 = Yp(Math.min(...ys)), y1 = Yp(Math.max(...ys)), w = Math.max(0.85 * M, 14 * FS()), h = Math.max(y1 - y0, 10 * FS()); // drawn 0.63 m wide (Y-SUB width), so the gaps show
     g.fillStyle = mem.some(([o]) => !o.mute) ? "#ffffff" : "rgba(120,120,120,.6)"; g.strokeStyle = "#000"; g.lineWidth = 2;
     g.fillRect(cx - w / 2, y0, w, h); g.strokeRect(cx - w / 2, y0, w, h);
     const a = 7 * FS(); g.fillStyle = "#000";
@@ -362,9 +380,30 @@ function draw2d() {
     g.font = `700 ${fz}px IBM Plex Mono, monospace`; const tw = g.measureText(lab).width; if (tw > w - 3) { fz *= (w - 3) / tw; g.font = `700 ${fz}px IBM Plex Mono, monospace`; }
     g.fillStyle = "#000"; g.textAlign = "center"; g.fillText(lab, cx, (y0 + y1) / 2 + fz * 0.36);
   });
+  // dimension line between neighbouring stacks in a row (centre to centre)
+  { const cs = [], seen = new Set();
+    for (const s of st.subs) if (s.stack && !seen.has(s.stack)) { seen.add(s.stack); const mem = st.subs.filter((o) => o.stack === s.stack);
+      cs.push({ x: mem.reduce((a, o) => a + o.x, 0) / mem.length, y: Math.min(...mem.map((o) => o.y)) }); }
+    cs.sort((a, b) => a.x - b.x);
+    g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineWidth = 1.2; g.font = font(600, 11, "IBM Plex Mono, monospace"); g.textAlign = "center";
+    for (let k = 1; k < cs.length; k++) {
+      const a = cs[k - 1], b = cs[k], d = b.x - a.x;
+      if (Math.abs(a.y - b.y) > 0.05 || d > st.w * 1.5 + 0.01) continue; // only neighbours in the same row (not the L/R gap)
+      const yy = Yp(a.y) - 16 * FS(), xa = X(a.x), xb = X(b.x), tk = 4 * FS();
+      g.beginPath(); g.moveTo(xa, yy); g.lineTo(xb, yy); g.moveTo(xa, yy - tk); g.lineTo(xa, yy + tk); g.moveTo(xb, yy - tk); g.lineTo(xb, yy + tk); g.stroke();
+      const lab = d.toFixed(2) + " m", lw = g.measureText(lab).width;
+      if (lw + 6 < xb - xa) { g.fillStyle = "rgba(0,0,0,.65)"; g.fillRect((xa + xb) / 2 - lw / 2 - 3, yy - 13 * FS(), lw + 6, 11 * FS()); g.fillStyle = "#fff"; g.fillText(lab, (xa + xb) / 2, yy - 4 * FS()); }
+    }
+    // when the gap is too narrow for the number, write it once above each row instead
+    if (cs.length > 1 && st.m > 1 && g.measureText("0.00 m").width + 6 >= X(cs[1].x) - X(cs[0].x)) {
+      const rows = []; for (const c of cs) { const r = rows.find((q) => Math.abs(q.y - c.y) < 0.05 && c.x - q.x1 <= st.w * 1.5 + 0.01); if (r) r.x1 = c.x; else rows.push({ y: c.y, x0: c.x, x1: c.x }); }
+      for (const r of rows) { if (r.x1 === r.x0) continue; const lab = "\u2194 " + st.w.toFixed(2) + " m", lw = g.measureText(lab).width, cx = (X(r.x0) + X(r.x1)) / 2, yy = Yp(r.y) - 30 * FS();
+        g.fillStyle = "rgba(0,0,0,.65)"; g.fillRect(cx - lw / 2 - 4, yy - 10 * FS(), lw + 8, 13 * FS()); g.fillStyle = "#fff"; g.textAlign = "center"; g.fillText(lab, cx, yy); }
+    }
+  }
   st.subs.forEach((s, i) => {
     if (s.stack) return;
-    const w = (0.9 / (AREA.x1 - AREA.x0)) * PW + 4 * FS(), x = X(s.x), y = Yp(s.y);
+    const w = (1.2 / (AREA.x1 - AREA.x0)) * PW + 6 * FS(), x = X(s.x), y = Yp(s.y);
     g.save(); g.translate(x, y); g.rotate((s.rot || 0) + (s.face === -1 ? Math.PI : 0));
     g.fillStyle = s.mute ? "rgba(120,120,120,.6)" : s.pol < 0 ? "#ffa53d" : "#ffffff"; g.strokeStyle = "#000"; g.lineWidth = 2;
     g.fillRect(-w / 2, -w / 2, w, w); g.strokeRect(-w / 2, -w / 2, w, w);
@@ -394,7 +433,7 @@ function drawPolar() {
   for (let d = 0; d >= -24; d -= 6) { const rr = R * (1 + d / 30); p.beginPath(); p.arc(cx, cy, rr, 0, 7); p.stroke(); p.fillText(`${d}`, cx + 4, cy - rr + 14); }
   for (let a = 0; a < 360; a += 45) { const r = (a * Math.PI) / 180; p.beginPath(); p.moveTo(cx, cy); p.lineTo(cx + R * Math.sin(r), cy + R * Math.cos(r)); p.stroke(); }
   p.fillStyle = fg; p.textAlign = "center"; p.font = "600 14px Assistant, sans-serif";
-  p.fillText("קדימה (קהל)", cx, cy + R + 20); p.fillText("אחורה (במה)", cx, cy - R - 8);
+  p.fillText("מקדימה (קהל)", cx, cy + R + 20); p.fillText("מאחור (במה)", cx, cy - R - 8);
   p.beginPath();
   vals.forEach((v, k) => { const r = (k * 3 * Math.PI) / 180, rr = R * Math.max(0, 1 + (v - mx) / 30); const x = cx + rr * Math.sin(r), y = cy + rr * Math.cos(r); k ? p.lineTo(x, y) : p.moveTo(x, y); });
   p.closePath(); p.strokeStyle = ac; p.lineWidth = 3; p.stroke(); p.globalAlpha = 0.15; p.fillStyle = ac; p.fill(); p.globalAlpha = 1; p.lineWidth = 1;
@@ -431,7 +470,7 @@ function readouts() {
   else { let s = 0; for (const fc of BANDS) { const r = field(c[0], c[1] + 10, fc); s += 20 * Math.log10(Math.sqrt(r.p) / (r.mag || 1e-9)); } eff = s / BANDS.length; }
   $("cEff").textContent = eff.toFixed(1) + " dB";
   $("cLam").textContent = f ? (C / f).toFixed(2) + " m" : "1.4–10.9 m";
-  $("cLamT").textContent = f ? `אורך גל ב-${f} Hz · חצי: ${(C / f / 2).toFixed(2)} m · מחזור: ${(1000 / f).toFixed(1)} ms` : "אורכי גל בפס 31.5–125 Hz";
+  $("cLamT").textContent = f ? `אורך גל ב-\u2066${+f.toFixed(1)} Hz\u2069 · חצי: \u2066${(C / f / 2).toFixed(2)} m\u2069 · מחזור: \u2066${(1000 / f).toFixed(1)} ms\u2069` : "אורכי גל בפס \u206631.5–125 Hz\u2069";
 }
 
 // ---------- table ----------
@@ -441,7 +480,7 @@ function table() {
     <td>${i + 1}</td>
     <td><input type="number" step="0.1" data-k="x" value="${s.x}"${st.locked ? " disabled" : ""} aria-label="X של סאב ${i + 1}"></td>
     <td><input type="number" step="0.1" data-k="y" value="${s.y}"${st.locked ? " disabled" : ""} aria-label="Y של סאב ${i + 1}"></td>
-    <td><select data-k="face" aria-label="כיוון סאב ${i + 1}"><option value="1"${s.face !== -1 ? " selected" : ""}>קדימה</option><option value="-1"${s.face === -1 ? " selected" : ""}>אחורה</option></select></td>
+    <td><button class="btn pol${s.face === -1 ? " neg" : ""}" data-k="face" title="${s.face === -1 ? "פונה אחורה, לבמה" : "פונה קדימה, לקהל"}" aria-label="כיוון סאב ${i + 1}: ${s.face === -1 ? "אחורה" : "קדימה"}">${s.face === -1 ? "↑" : "↓"}</button></td>
     <td><input type="number" step="0.1" min="0" data-k="delay" value="${s.delay}" aria-label="דיליי של סאב ${i + 1}"></td>
     <td><button class="btn pol${s.pol < 0 ? " neg" : ""}" data-k="pol" aria-label="polarity של סאב ${i + 1}">${s.pol < 0 ? "−" : "+"}</button></td>
     <td><input type="number" step="1" data-k="gain" value="${s.gain}" aria-label="gain של סאב ${i + 1}"></td>
@@ -454,7 +493,7 @@ $("tbl").addEventListener("change", (e) => {
 });
 $("tbl").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-k]"); if (!b) return; const s = st.subs[+b.closest("tr").dataset.i];
-  if (b.dataset.k === "pol") s.pol = -s.pol; else s.mute = !s.mute;
+  if (b.dataset.k === "pol") s.pol = -s.pol; else if (b.dataset.k === "face") s.face = s.face === -1 ? 1 : -1; else s.mute = !s.mute;
   table(); update();
 });
 
@@ -488,7 +527,7 @@ function syncUI() {
   $("f").value = st.fi; $("fO").textContent = +fHz().toFixed(1) + " Hz"; $("rowF").hidden = st.sig !== "tone";
   $("foh").value = st.foh; $("fohO").textContent = st.foh + " m";
   $("presetNote").textContent = (st.preset === "card" && st.cardT !== "inline" ? PRE[st.cardT].note : P.note) + (st.preset === "end" && st.n > 1 ? ` דיליי לכל צעד: ${(st.sp / C * 1000).toFixed(2)} ms.` : "") + (st.preset === "card" ? ` כאן: ${(st.sp / C * 1000).toFixed(2)} ms.` : "");
-  $("viewHint").textContent = st.locked ? "הבמה למעלה, הקהל למטה. 0 dB = הרמה ב-FOH. הסאבים במיקום של התצורה." : "הבמה למעלה, הקהל למטה. 0 dB = הרמה ב-FOH. גררו סאב או ערימה כדי להזיז.";
+  $("viewHint").textContent = st.locked ? "הבמה למעלה, הקהל למטה. \u20660 dB\u2069 = העוצמה ב-\u2066FOH\u2069. הסאבים במיקום של התצורה." : "הבמה למעלה, הקהל למטה. \u20660 dB\u2069 = העוצמה ב-\u2066FOH\u2069. גררו סאב או ערימה כדי להזיז.";
 }
 function applyPreset(p) {
   st.preset = p; const P = PRE[p]; st.n = P.n[2]; if (P.sp) st.sp = P.sp[2];
@@ -521,7 +560,7 @@ $("sBand").onclick = () => { st.sig = "band"; update(); };
 // double tap / double click on a slider value: type an exact number (phone shows a numeric keypad)
 const KEY = { n: "n", sp: "sp", m: "m", w: "w", ang: "ang", lr: "lrW", foh: "foh", f: "fx" };
 function editValue(out) {
-  const rng = out.parentElement.querySelector('input[type="range"]'); if (!rng || out.dataset.editing) return;
+  const rng = out.closest(".r").querySelector('input[type="range"]'); if (!rng || out.dataset.editing) return;
   const id = rng.id, key = KEY[id]; if (!key) return;
   const open = id === "sp" || id === "w" || id === "lr"; // spacings: no upper limit when typed
   const lo = id === "f" ? 20 : +rng.min, hi = id === "f" ? 250 : open ? Infinity : +rng.max, isInt = id === "n" || id === "m";
@@ -550,6 +589,7 @@ document.querySelectorAll(".r output[id]").forEach((out) => {
   let last = 0; // phones: detect the double tap ourselves
   out.addEventListener("pointerup", (e) => { if (e.pointerType === "mouse") return; const now = Date.now(); if (now - last < 400) { e.preventDefault(); editValue(out); last = 0; } else last = now; });
 });
+document.querySelectorAll(".gfold").forEach((d) => d.addEventListener("toggle", () => { if (d.open) update(); }));
 $("lockBtn").onclick = () => { st.locked = !st.locked; table(); update(); };
 // pointer: drag a sub (or a whole stack) when unlocked
 let drag = null;
